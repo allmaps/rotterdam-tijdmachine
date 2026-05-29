@@ -31,3 +31,13 @@ De vergelijkingsmodus stelt gebruikers in staat om twee historische kaarten naas
 **Props doorgeven:**
 - De kaarten ontvangen via `$props` de annotatie en opacity. Dit maakt het mogelijk dezelfde `Map.svelte` component tweemaal te gebruiken met verschillende waarden
 - De `Nav` componenten ontvangen `onSelect` callback zodat wijzigingen in de zijpanelen meteen beide kaarten updaten
+
+## 6. Kaartinfo en Download
+
+### 6.1 Kaartinfo paneel
+
+In het navigatiepaneel is een informatieblok toegevoegd dat details toont over de geselecteerde historische kaart. Dit bevat het jaar, de broninstelling en het formaat (IIIF / GeoRef). De informatie wordt automatisch bijgewerkt wanneer de gebruiker een andere kaart selecteert.
+
+### 6.2 Download knop
+
+Er is een downloadknop toegevoegd waarmee de gebruiker de historische kaart kan downloaden of de originele bronpagina kan openen. Als de kaart een directe IIIF-afbeelding heeft, wordt een directe download-URL opgebouwd. Anders opent de knop de bronpagina van de betreffende instelling in een nieuw tabblad.

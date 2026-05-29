@@ -11,3 +11,23 @@ In het navigatiepaneel is een slider toegevoegd waarmee de gebruiker de transpar
 ### 3.2 Kaartcollectie en navigatiepaneel
 
 Er is een zijpaneel gebouwd (Nav.svelte) waarmee de gebruiker kan wisselen tussen historische kaarten. De kaarten worden weergegeven in een lijst met het jaar en een korte naam. Het actieve jaar wordt bijgehouden via een $state variabele, zodat de geselecteerde kaart visueel gemarkeerd wordt. Bij het klikken op een kaart wordt de bijbehorende annotatie geladen op de kaart.
+
+### 3.3 Vergelijkingsmodus – twee kaarten naast elkaar
+
+De vergelijkingsmodus stelt gebruikers in staat om twee historische kaarten naast elkaar te bekijken. Dit wordt geactiveerd via de "Vergelijken" knop in de header. 
+
+**Hoe het werkt:**
+- Wanneer vergelijken actief is, worden twee kaarten naast elkaar weergegeven
+- Aan elke kaart is een apart navigatiepaneel gekoppeld, zodat de gebruiker verschillende kaarten voor links en rechts kan kiezen
+- De kaarten worden **gesynchroniseerd**: als je de linkerkaart verschuift of inzoomt, volgt de rechterkaart automatisch
+- Beide kaarten hebben een aparte transparantie slider
+
+**State management:**
+- De vergelijkingsmodus gebruikt de globale `comparison` store met:
+  - `active`: of de modus aan/uit is
+  - `leftAnnotation` en `rightAnnotation`: welke kaarten gekozen zijn
+  - `leftOpacity` en `rightOpacity`: transparantie per kaart
+
+**Props doorgeven:**
+- De kaarten ontvangen via `$props` de annotatie en opacity. Dit maakt het mogelijk dezelfde `Map.svelte` component tweemaal te gebruiken met verschillende waarden
+- De `Nav` componenten ontvangen `onSelect` callback zodat wijzigingen in de zijpanelen meteen beide kaarten updaten

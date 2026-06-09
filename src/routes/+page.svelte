@@ -10,6 +10,10 @@
 
 	let overOpen = $state(false);
 	let shareOpen = $state(false);
+	let navOpen = $state(false);
+	$effect(() => {
+		if (comparison.active) navOpen = false;
+	});
 
 	if (!comparison.leftAnnotation) comparison.leftAnnotation = data[0]?.annotation ?? '';
 	if (!comparison.rightAnnotation) comparison.rightAnnotation = data[1]?.annotation ?? '';
@@ -34,33 +38,79 @@
 </script>
 
 <div class="flex h-screen flex-col">
-	<Header onOverOpen={() => (overOpen = true)} onShareOpen={() => (shareOpen = true)} />
+	<Header
+		onOverOpen={() => (overOpen = true)}
+		onShareOpen={() => (shareOpen = true)}
+		onMenuToggle={() => (navOpen = !navOpen)}
+	/>
 
 	{#if !comparison.active}
 		<div class="flex flex-1 flex-row overflow-hidden">
-			<Nav />
+			<div class="{navOpen ? 'block' : 'hidden'} md:block">
+				<Nav onOverOpen={() => (overOpen = true)} onShareOpen={() => (shareOpen = true)} />
+			</div>
+
 			<div class="relative flex-1 grow">
 				<Map />
 			</div>
 		</div>
 	{:else}
-		<div class="flex flex-1 flex-row overflow-hidden">
-			<Nav
-				onSelect={(ann) => (comparison.leftAnnotation = ann)}
-				opacity={comparison.leftOpacity}
-				onOpacityChange={(v) => (comparison.leftOpacity = v)}
-			/>
-			<div class="relative flex-1 border-r-2 border-gray-300">
-				<Map annotation={comparison.leftAnnotation} opacity={comparison.leftOpacity} />
+		<div class="flex flex-1 flex-col overflow-hidden md:flex-row">
+			<!-- Desktop: nav links -->
+			<div class="hidden md:block">
+				<Nav
+					onSelect={(ann) => (comparison.leftAnnotation = ann)}
+					opacity={comparison.leftOpacity}
+					onOpacityChange={(v) => (comparison.leftOpacity = v)}
+				/>
 			</div>
-			<div class="relative flex-1">
-				<Map annotation={comparison.rightAnnotation} opacity={comparison.rightOpacity} />
+
+			<!-- Kaarten: 2 Map instanties, layout past zich aan -->
+			<div class="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
+				<!-- Panel 1 -->
+				<div class="flex flex-col md:flex-1 md:border-r-2 md:border-gray-300">
+					<!-- Mobiel: volledige nav boven kaart -->
+					<div class="flex-none md:hidden">
+						<Nav
+							onSelect={(ann) => (comparison.leftAnnotation = ann)}
+							opacity={comparison.leftOpacity}
+							onOpacityChange={(v) => (comparison.leftOpacity = v)}
+							onOverOpen={() => (overOpen = true)}
+							onShareOpen={() => (shareOpen = true)}
+						/>
+					</div>
+					<!-- Kaart (vaste hoogte op mobiel, flexibel op desktop) -->
+					<div class="relative h-72 flex-none border-b-2 border-gray-300 md:relative md:h-auto md:flex-1 md:border-b-0">
+						<Map annotation={comparison.leftAnnotation} opacity={comparison.leftOpacity} />
+					</div>
+				</div>
+				<!-- Panel 2 -->
+				<div class="flex flex-col md:flex-1">
+					<!-- Mobiel: volledige nav boven kaart -->
+					<div class="flex-none md:hidden">
+						<Nav
+							onSelect={(ann) => (comparison.rightAnnotation = ann)}
+							opacity={comparison.rightOpacity}
+							onOpacityChange={(v) => (comparison.rightOpacity = v)}
+							onOverOpen={() => (overOpen = true)}
+							onShareOpen={() => (shareOpen = true)}
+						/>
+					</div>
+					<!-- Kaart -->
+					<div class="relative h-72 flex-none md:relative md:h-auto md:flex-1">
+						<Map annotation={comparison.rightAnnotation} opacity={comparison.rightOpacity} />
+					</div>
+				</div>
 			</div>
-			<Nav
-				onSelect={(ann) => (comparison.rightAnnotation = ann)}
-				opacity={comparison.rightOpacity}
-				onOpacityChange={(v) => (comparison.rightOpacity = v)}
-			/>
+
+			<!-- Desktop: nav rechts -->
+			<div class="hidden md:block">
+				<Nav
+					onSelect={(ann) => (comparison.rightAnnotation = ann)}
+					opacity={comparison.rightOpacity}
+					onOpacityChange={(v) => (comparison.rightOpacity = v)}
+				/>
+			</div>
 		</div>
 	{/if}
 

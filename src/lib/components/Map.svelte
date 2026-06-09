@@ -62,7 +62,7 @@
 		if (loaded && zoomTo.annotation) {
 			const ids = mapIdsByAnnotation.get(zoomTo.annotation);
 			if (ids) {
-				const bounds = warpedMapLayer.getMapsBounds(ids);
+				const bounds = warpedMapLayer.getMapsBounds([...ids]);
 				if (bounds) {
 					map.fitBounds(bounds, { padding: 40 });
 				}

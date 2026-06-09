@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	import { viewState, favorites, toggleFavorite, zoomTo } from '$lib/store.svelte';
+	import { viewState, favorites, toggleFavorite, zoomTo, comparison } from '$lib/store.svelte';
 
 	let {
 		onSelect = null,
 		opacity = null,
-		onOpacityChange = null
+		onOpacityChange = null,
+		onOverOpen = null,
+		onShareOpen = null
 	}: {
 		onSelect?: ((annotation: string) => void) | null;
 		opacity?: number | null;
 		onOpacityChange?: ((value: number) => void) | null;
+		onOverOpen?: (() => void) | null;
+		onShareOpen?: (() => void) | null;
 	} = $props();
 
 	const collection = new MapCollection();
@@ -67,9 +71,30 @@
 </script>
 
 <aside
-	class="bg-gray-44 w-70 flex-none overflow-y-auto p-4"
+	class="bg-gray-44 h-full w-70 flex-none overflow-y-auto p-4"
 	style="font-family: 'Barlow Condensed', sans-serif;"
 >
+	<div class="mb-4 flex flex-col gap-2 md:hidden">
+		<button
+			onclick={() => (comparison.active = !comparison.active)}
+			class="rounded bg-gray-800 px-3 py-2 text-sm font-semibold text-white"
+		>
+			{comparison.active ? 'Sluiten' : 'Vergelijken'}
+		</button>
+		<div class="flex gap-2">
+			{#if onOverOpen}
+				<button onclick={onOverOpen} class="flex-1 rounded bg-gray-200 py-1 text-sm text-gray-700"
+					>Over</button
+				>
+			{/if}
+			{#if onShareOpen}
+				<button onclick={onShareOpen} class="flex-1 rounded bg-gray-200 py-1 text-sm text-gray-700"
+					>Delen</button
+				>
+			{/if}
+		</div>
+	</div>
+
 	<h2 class="mb-3 text-sm font-bold tracking-widest text-gray-500 uppercase">Kaartcollectie</h2>
 
 	<div class="mb-3 flex gap-2">
@@ -94,7 +119,7 @@
 	<p class="mb-1 text-xs font-bold tracking-widest text-gray-500 uppercase">Tijdperiode</p>
 	<select
 		bind:value={periodeFilter}
-		class="mb-3 w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-700"
+		class="mb-3 w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-700 focus:ring-1 focus:ring-green-700 focus:outline-none"
 	>
 		<option value="alle">Alle periodes</option>
 		<option value="voor1850">Voor 1850</option>
@@ -141,7 +166,7 @@
 
 				<a
 					href={map.metadata.iiif?.type === 'image'
-						? map.metadata.iiif.url + '/full/full/0/default.jpg'
+						? map.metadata.iiif.url.replace('/info.json', '') + '/full/full/0/default.jpg'
 						: map.metadata.url}
 					target="_blank"
 					download

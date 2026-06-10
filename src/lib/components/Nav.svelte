@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	import { viewState, favorites, toggleFavorite, zoomTo, comparison } from '$lib/store.svelte';
+	import { viewState, favorites, toggleFavorite, zoomTo, comparison, loadedAnnotations } from '$lib/store.svelte';
 
 	let {
 		onSelect = null,
@@ -52,6 +52,8 @@
 
 	let zichtbareKaarten = $derived(
 		maps.filter((m) => {
+			const beschikbaar = loadedAnnotations.size === 0 || loadedAnnotations.has(m.metadata.annotation);
+			if (!beschikbaar) return false;
 			const favorietOk = toonAlleen ? favorites.includes(m.metadata.annotation) : true;
 			const periodeOk =
 				periodeFilter === 'alle'

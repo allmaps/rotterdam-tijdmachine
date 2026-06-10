@@ -33,4 +33,6 @@
 	});
 	export const zoomTo = $state<{ annotation: string | null }>({ annotation: null });
 
+	export const loadedAnnotations = $state(new Set<string>());
+
 </script>

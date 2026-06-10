@@ -3,7 +3,7 @@
 	import maplibregl from 'maplibre-gl';
 	import { WarpedMapLayer } from '@allmaps/maplibre';
 	import 'maplibre-gl/dist/maplibre-gl.css';
-	import { viewState, flyTo, selectedLocation, mapView, zoomTo } from '$lib/store.svelte';
+	import { viewState, flyTo, selectedLocation, mapView, zoomTo, loadedAnnotations } from '$lib/store.svelte';
 	import { replaceState } from '$app/navigation';
 	import { MapCollection } from '$lib/models/MapCollection';
 
@@ -59,7 +59,7 @@
 
 	// Zoom naar geselecteerde kaart
 	$effect(() => {
-		if (loaded && zoomTo.annotation) {
+		if (loaded && zoomTo.annotation && zoomTo.annotation === actieveAnnotation) {
 			const ids = mapIdsByAnnotation.get(zoomTo.annotation);
 			if (ids) {
 				const bounds = warpedMapLayer.getMapsBounds([...ids]);
@@ -135,8 +135,16 @@
 			await Promise.all(
 				allMaps.map(async (mapCard) => {
 					const annotationUrl = mapCard.metadata.annotation;
-					const ids = await warpedMapLayer.addGeoreferenceAnnotationByUrl(annotationUrl);
-					mapIdsByAnnotation.set(annotationUrl, new Set(ids));
+					try {
+						const ids = await warpedMapLayer.addGeoreferenceAnnotationByUrl(annotationUrl);
+						const stringIds = ids.filter((id): id is string => typeof id === 'string');
+						if (stringIds.length > 0) {
+							mapIdsByAnnotation.set(annotationUrl, new Set(stringIds));
+							loadedAnnotations.add(annotationUrl);
+						}
+					} catch {
+						console.warn('Kon annotatie niet laden:', annotationUrl);
+					}
 				})
 			);
 			loaded = true;

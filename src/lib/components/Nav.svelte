@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	import { viewState, favorites, toggleFavorite, zoomTo, comparison, loadedAnnotations } from '$lib/store.svelte';
+	// import { viewState, favorites, toggleFavorite, zoomTo, comparison, loadedAnnotations } from '$lib/store.svelte';
+	import { viewState, favorites, toggleFavorite, loadedAnnotations } from '$lib/store.svelte';
+
 
 	let {
 		onSelect = null,
@@ -77,12 +79,7 @@
 	style="font-family: 'Barlow Condensed', sans-serif;"
 >
 	<div class="mb-4 flex flex-col gap-2 md:hidden">
-		<button
-			onclick={() => (comparison.active = !comparison.active)}
-			class="rounded bg-gray-800 px-3 py-2 text-sm font-semibold text-white"
-		>
-			{comparison.active ? 'Sluiten' : 'Vergelijken'}
-		</button>
+		
 		<div class="flex gap-2">
 			{#if onOverOpen}
 				<button onclick={onOverOpen} class="flex-1 rounded bg-gray-200 py-1 text-sm text-gray-700"
@@ -146,7 +143,7 @@
 			<span>100%</span>
 		</div>
 	</div>
-
+<!-- 
 	<div class="mt-6 border-t border-gray-200 pt-4">
 		<p class="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">Kaartinfo</p>
 		{#each maps as map}
@@ -212,7 +209,7 @@
 				</button>
 			{/if}
 		{/each}
-	</div>
+	</div> -->
 
 	<ul class="mt-6 flex flex-col divide-y divide-gray-200">
 		{#each zichtbareKaarten as map}

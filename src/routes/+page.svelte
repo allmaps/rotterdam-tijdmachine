@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Map from '$lib/components/Map.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import MapInfo from '$lib/components/MapInfo.svelte';
+
 	import Header from '$lib/components/Header.svelte';
 	import About from '$lib/components/About.svelte';
 	import Share from '$lib/components/Share.svelte';
@@ -52,6 +54,7 @@
 
 			<div class="relative flex-1 grow">
 				<Map />
+				<MapInfo />
 			</div>
 		</div>
 	{:else}
@@ -80,7 +83,9 @@
 						/>
 					</div>
 					<!-- Kaart (vaste hoogte op mobiel, flexibel op desktop) -->
-					<div class="relative h-72 flex-none border-b-2 border-gray-300 md:relative md:h-auto md:flex-1 md:border-b-0">
+					<div
+						class="relative h-72 flex-none border-b-2 border-gray-300 md:relative md:h-auto md:flex-1 md:border-b-0"
+					>
 						<Map annotation={comparison.leftAnnotation} opacity={comparison.leftOpacity} />
 					</div>
 				</div>

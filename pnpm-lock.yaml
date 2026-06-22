@@ -11,6 +11,9 @@ importers:
       '@allmaps/maplibre':
         specifier: 1.0.0-beta.43
         version: 1.0.0-beta.43
+      '@lucide/svelte':
+        specifier: ^1.21.0
+        version: 1.21.0(svelte@5.55.8(@typescript-eslint/types@8.59.4))
       '@tailwindcss/typography':
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.3.0)
@@ -216,6 +219,11 @@ packages:
 
   '@kninnug/constrainautor@4.1.0':
     resolution: {integrity: sha512-YEkGtzMewRxPRZuK1QmFDmELwaSL4LSLmc0WXTmpT8AqdcR/Ueu77fiJZ2lwOwXUX8aBJpHuy/e/06/Ve2dPNQ==}
+
+  '@lucide/svelte@1.21.0':
+    resolution: {integrity: sha512-MEv//A7Jv3kHukZowv/DWp1MAtUzJKYwtJsmnQ7X98lCgtac3z3NbaToDl3Q6jO3gS9sougFpcD+t+YuxOkRMw==}
+    peerDependencies:
+      svelte: ^5
 
   '@mapbox/jsonlint-lines-primitives@2.0.2':
     resolution: {integrity: sha512-rY0o9A5ECsTQRVhv7tL/OyDpGAoUB4tTvLiW1DSzQGq4bvTPhNw1VpSNjDJc5GFZ2XuyOtSWSVN05qOtcD71qQ==}
@@ -1589,6 +1597,10 @@ snapshots:
   '@kninnug/constrainautor@4.1.0':
     dependencies:
       robust-predicates: 3.0.3
+
+  '@lucide/svelte@1.21.0(svelte@5.55.8(@typescript-eslint/types@8.59.4))':
+    dependencies:
+      svelte: 5.55.8(@typescript-eslint/types@8.59.4)
 
   '@mapbox/jsonlint-lines-primitives@2.0.2': {}
 

@@ -31,7 +31,7 @@
 
 {#if activeMap}
 	<div
-		class="absolute right-4 bottom-8 z-10 w-64 rounded-lg bg-white p-3 shadow-lg"
+		class="absolute right-2 bottom-8 z-10 w-60   max-h-70 rounded-lg bg-white p-1 shadow-lg"
 		style="font-family: 'Barlow Condensed', sans-serif;"
 	>
 		<p class="mb-2 text-xs font-bold tracking-widest text-gray-500 uppercase">Kaartinfo</p>

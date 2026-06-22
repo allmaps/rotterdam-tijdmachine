@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	// import { viewState, favorites, toggleFavorite, zoomTo, comparison, loadedAnnotations } from '$lib/store.svelte';
 	import { viewState, favorites, toggleFavorite, loadedAnnotations } from '$lib/store.svelte';
 
 
@@ -75,7 +74,7 @@
 </script>
 
 <aside
-	class="bg-gray-44 h-full w-70 flex-none overflow-y-auto p-4"
+    class="bg-gray-50 h-full w-72 flex-none overflow-y-auto p-4"
 	style="font-family: 'Barlow Condensed', sans-serif;"
 >
 	<div class="mb-4 flex flex-col gap-2 md:hidden">
@@ -127,73 +126,6 @@
 		<option value="na1940">Na 1940</option>
 	</select>
 
-<!-- 
-	<div class="mt-6 border-t border-gray-200 pt-4">
-		<p class="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">Kaartinfo</p>
-		{#each maps as map}
-			{#if map.metadata.annotation === activeAnnotation}
-				<dl class="flex flex-col gap-1 text-xs text-gray-700">
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Jaar</dt>
-						<dd class="font-semibold">{map.metadata.year}</dd>
-					</div>
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Bron</dt>
-						<dd class="text-right font-semibold">{map.metadata.institution}</dd>
-					</div>
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Formaat</dt>
-						<dd class="font-semibold">{map.metadata.iiif ? 'IIIF / GeoRef' : 'GeoRef'}</dd>
-					</div>
-				</dl>
-
-				<a
-					href={map.metadata.iiif?.type === 'image'
-						? map.metadata.iiif.url.replace('/info.json', '') + '/full/full/0/default.jpg'
-						: map.metadata.url}
-					target="_blank"
-					download
-					class="mt-2 flex w-full items-center justify-center gap-2 rounded border border-green-700 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5 5 5-5M12 15V3"
-						/>
-					</svg>
-					Download kaart
-				</a>
-				<button
-					onclick={() => (zoomTo.annotation = activeAnnotation ?? null)}
-					class="mt-2 flex w-full items-center justify-center gap-2 rounded bg-green-700 px-3 py-2 text-xs font-semibold text-white hover:bg-green-800"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-						/>
-					</svg>
-					Zoom naar kaart
-				</button>
-			{/if}
-		{/each}
-	</div> -->
 
 	<ul class="mt-6 flex flex-col divide-y divide-gray-200">
 		{#each zichtbareKaarten as map}

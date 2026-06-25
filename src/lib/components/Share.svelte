@@ -2,10 +2,17 @@
 	let { onClose }: { onClose: () => void } = $props();
 
 	let url = $state('');
+	let copied = $state(false);
 
 	$effect(() => {
 		url = window.location.href;
 	});
+
+	function kopieer() {
+		navigator.clipboard.writeText(url);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
+	}
 </script>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -26,25 +33,11 @@
 				class="flex-1 rounded border border-gray-300 px-3 py-2 text-sm text-gray-700"
 			/>
 			<button
-				onclick={() => navigator.clipboard.writeText(url)}
-				class="flex items-center gap-2 rounded bg-gray-800 px-4 py-2 text-sm text-white hover:bg-gray-700"
+				onclick={kopieer}
+				class="flex items-center gap-2 rounded px-4 py-2 text-sm text-white transition-colors {copied ? 'bg-green-600' : 'bg-gray-800 hover:bg-gray-700'}"
 			>
-				📋 Kopieer
+				{copied ? '✅ Gekopieerd!' : '📋 Kopieer'}
 			</button>
-		</div>
-		<div class="flex justify-center gap-6 text-2xl">
-			<a href="mailto:?body={url}" class="hover:opacity-70">✉️</a>
-			<a
-				href="https://www.linkedin.com/sharing/share-offsite/?url={url}"
-				target="_blank"
-				class="hover:opacity-70"
-			>
-				🔗
-			</a>
-			<a href="https://www.reddit.com/submit?url={url}" target="_blank" class="hover:opacity-70">
-				👾
-			</a>
-			<a href="https://wa.me/?text={url}" target="_blank" class="hover:opacity-70">💬</a>
 		</div>
 	</div>
 </div>

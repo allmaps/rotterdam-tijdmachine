@@ -42,7 +42,7 @@
 	}
 </script>
 
-<aside class="z-20 flex h-full flex-none flex-col pb-20 font-bolder text-gray-800 md:pb-0">
+<aside class="time-slider z-20 flex h-full flex-none flex-col pb-20 font-bolder text-gray-800">
 	<div class="relative min-h-0 flex-1">
 		<BitsSlider.Root
 			type="single"
@@ -56,7 +56,7 @@
 		>
 			{#snippet children({ tickItems })}
 				<span
-					class="absolute z-5 hidden h-full w-24 cursor-pointer overflow-hidden bg-transparent md:inline md:bg-white/80 {sliderSurfaceClass}"
+					class="time-slider-surface absolute z-5 h-full w-24 cursor-pointer overflow-hidden bg-transparent {sliderSurfaceClass}"
 				>
 					<BitsSlider.Range class="absolute w-full" />
 				</span>
@@ -75,7 +75,7 @@
 					{#if value % 5 === 0}
 						<BitsSlider.Tick
 							{index}
-							class="absolute z-10 hidden h-0.5 w-2 bg-gray-400 md:flex {tickClass}"
+							class="time-slider-tick absolute z-10 h-0.5 w-2 bg-gray-400 {tickClass}"
 						/>
 					{/if}
 
@@ -83,7 +83,7 @@
 						<BitsSlider.TickLabel
 							{index}
 							position={navPosition === 'right' ? 'left' : 'right'}
-							class="z-5 hidden leading-none md:flex {isCenturyYear(value)
+							class="time-slider-label z-5 leading-none {isCenturyYear(value)
 								? 'font-heading text-sm font-bold text-gray-950'
 								: 'font-noto text-xs font-semibold text-gray-500'} {yearLabelClass}"
 						>
@@ -97,7 +97,7 @@
 						{#if isAvailableYear(value)}
 							<BitsSlider.Tick
 								{index}
-								class="absolute z-10 h-1 w-12 bg-green-700/25 md:w-16 {tickClass}"
+								class="time-slider-map-year-tick absolute z-10 h-1 w-12 bg-green-700/25 {tickClass}"
 							/>
 						{/if}
 					{/each}
@@ -106,3 +106,31 @@
 		</BitsSlider.Root>
 	</div>
 </aside>
+
+<style>
+	.time-slider-surface,
+	:global(.time-slider-tick),
+	:global(.time-slider-label) {
+		display: none;
+	}
+
+	@container map-pane (min-width: 48rem) {
+		.time-slider {
+			padding-bottom: 0;
+		}
+
+		.time-slider-surface {
+			display: inline;
+			background-color: rgb(255 255 255 / 0.8);
+		}
+
+		:global(.time-slider-tick),
+		:global(.time-slider-label) {
+			display: flex;
+		}
+
+		:global(.time-slider-map-year-tick) {
+			width: 4rem;
+		}
+	}
+</style>

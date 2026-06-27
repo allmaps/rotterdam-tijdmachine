@@ -13,6 +13,7 @@
 			zoom: 12
 		}),
 		navPosition = 'left',
+		panelId = `map-info-panel-${navPosition}`,
 		bordered = false,
 		showMapYearTicks = false,
 		syncUrl = false,
@@ -25,6 +26,7 @@
 		selectedYear: number;
 		currentLocation?: MapLocation;
 		navPosition?: 'left' | 'right';
+		panelId?: string;
 		bordered?: boolean;
 		showMapYearTicks?: boolean;
 		syncUrl?: boolean;
@@ -34,10 +36,13 @@
 	} = $props();
 
 	let mapOrderClass = $derived(navPosition === 'right' ? 'md:order-1' : 'md:order-2');
+	let controlsPosition: 'top-left' | 'top-right' = $derived(
+		navPosition === 'right' ? 'top-left' : 'top-right'
+	);
 </script>
 
 <section
-	class="relative flex flex-1 flex-row overflow-hidden {bordered
+	class="map-pane relative flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden {bordered
 		? 'md:border-r-2 md:border-gray-300'
 		: ''}"
 >
@@ -54,12 +59,14 @@
 			{enableFlyTo}
 			{enableLocationMarker}
 			{enableKeyboardToggle}
+			{controlsPosition}
 		/>
-		<MapInfo
-			bind:annotation
-			bind:opacity
-			bind:selectedYear
-			panelId="map-info-panel-{navPosition}"
-		/>
+		<MapInfo bind:annotation bind:selectedYear {panelId} />
 	</div>
 </section>
+
+<style>
+	.map-pane {
+		container: map-pane / inline-size;
+	}
+</style>

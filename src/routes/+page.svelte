@@ -14,12 +14,16 @@
 		center: [...mapView.center] as [number, number],
 		zoom: mapView.zoom
 	});
+	let compareStacked = $state(false);
 
 	if (!viewState.annotation) viewState.annotation = data[0]?.annotation ?? '';
 	if (!comparison.rightAnnotation) comparison.rightAnnotation = data[1]?.annotation ?? '';
 	let selectedYear = $state(yearForAnnotation(viewState.annotation) ?? data[0]?.year ?? 1900);
 	let rightSelectedYear = $state(
 		yearForAnnotation(comparison.rightAnnotation) ?? data[1]?.year ?? data[0]?.year ?? 1900
+	);
+	let leftNavPosition: 'left' | 'right' = $derived(
+		comparison.active && compareStacked ? 'right' : 'left'
 	);
 
 	$effect(() => {
@@ -32,11 +36,19 @@
 	}
 
 	onMount(() => {
+		const compareStackQuery = window.matchMedia('(max-width: 767px)');
 		const params = new URLSearchParams(window.location.search);
 		const lat = params.get('lat');
 		const lng = params.get('lng');
 		const zoom = params.get('zoom');
 		const year = params.get('year');
+
+		function syncCompareStacked(event: MediaQueryList | MediaQueryListEvent) {
+			compareStacked = event.matches;
+		}
+
+		syncCompareStacked(compareStackQuery);
+		compareStackQuery.addEventListener('change', syncCompareStacked);
 
 		if (lat && lng) {
 			currentLocation = {
@@ -52,6 +64,10 @@
 				viewState.annotation = gevonden.annotation;
 			}
 		}
+
+		return () => {
+			compareStackQuery.removeEventListener('change', syncCompareStacked);
+		};
 	});
 </script>
 
@@ -64,7 +80,8 @@
 			: 'overflow-hidden'}"
 	>
 		<MapPane
-			navPosition="left"
+			navPosition={leftNavPosition}
+			panelId="map-info-panel-left"
 			bordered={comparison.active}
 			bind:annotation={viewState.annotation}
 			bind:opacity={viewState.opacity}
@@ -79,6 +96,7 @@
 		{#if comparison.active}
 			<MapPane
 				navPosition="right"
+				panelId="map-info-panel-right"
 				bind:annotation={comparison.rightAnnotation}
 				bind:opacity={comparison.rightOpacity}
 				bind:selectedYear={rightSelectedYear}

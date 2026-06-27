@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	import { zoomTo } from '$lib/store.svelte';
-	import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, LocateFixed } from '@lucide/svelte';
+	import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from '@lucide/svelte';
 
 	let {
 		annotation = $bindable(),
-		opacity = $bindable(100),
 		selectedYear = $bindable(),
 		panelId = 'map-info-panel'
 	}: {
 		annotation?: string;
-		opacity?: number;
 		selectedYear: number;
 		panelId?: string;
 	} = $props();
@@ -22,7 +19,6 @@
 	let collapsed = $state(true);
 	let resolvedYear = $derived(resolveAvailableYear(selectedYear));
 	let mapsForResolvedYear = $derived(maps.filter((map) => map.metadata.year === resolvedYear));
-	let activeOpacity = $derived(opacity ?? 100);
 	let activeMap = $derived(
 		mapsForResolvedYear.find((map) => map.metadata.annotation === annotation) ??
 			mapsForResolvedYear[0]
@@ -50,10 +46,6 @@
 		return resolved;
 	}
 
-	function handleOpacity(e: Event) {
-		opacity = Number((e.target as HTMLInputElement).value);
-	}
-
 	function toggleCollapsed() {
 		collapsed = !collapsed;
 	}
@@ -74,7 +66,7 @@
 {#if activeMap}
 	{#if collapsed}
 		<div
-			class="absolute right-2 bottom-2 left-2 z-30 flex min-h-14 items-center gap-1 overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg md:right-auto md:left-1/2 md:w-80 md:-translate-x-1/2"
+			class="map-info-panel absolute z-30 flex min-h-14 items-center gap-1 overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg"
 		>
 			<button
 				type="button"
@@ -126,7 +118,7 @@
 	{:else}
 		<div
 			id={panelId}
-			class="absolute right-2 bottom-2 left-2 z-30 max-h-[min(32rem,calc(100%-1rem))] overflow-x-hidden overflow-y-auto rounded-md border border-gray-200 bg-white p-2 text-gray-900 shadow-lg md:right-auto md:left-1/2 md:w-80 md:-translate-x-1/2"
+			class="map-info-panel absolute z-30 max-h-[min(32rem,calc(100%-1rem))] overflow-x-hidden overflow-y-auto rounded-md border border-gray-200 bg-white p-2 text-gray-900 shadow-lg"
 		>
 			<div class="mb-2 flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
@@ -180,32 +172,6 @@
 				{/each}
 			</div>
 			<div class="mt-3 pt-2 leading-4">
-				<p class="text-m mb-3 font-bolder font-light">Transparantie</p>
-				<input
-					value={activeOpacity}
-					oninput={handleOpacity}
-					type="range"
-					min="0"
-					max="100"
-					class="m-0 mb-1 w-full accent-green-700"
-				/>
-				<div class="mb-3 flex justify-between text-xs text-gray-400">
-					<span>0%</span>
-					<span class="font-bold text-gray-700">{activeOpacity}%</span>
-					<span>100%</span>
-				</div>
-			</div>
-
-			<button
-				type="button"
-				onclick={() => (zoomTo.annotation = activeMap?.metadata.annotation ?? null)}
-				class="flex w-full items-center justify-center gap-2 rounded bg-green-700 px-3 py-2 text-xs font-semibold text-white hover:bg-green-800"
-			>
-				<LocateFixed size={14} />
-				Zoom
-			</button>
-
-			<div class="mt-3 pt-2 leading-4">
 				<p class="text-m mb-3 font-bolder font-light">Achtergrondkaart</p>
 				<p class="text-xs font-light break-words">
 					<a
@@ -230,3 +196,20 @@
 		</div>
 	{/if}
 {/if}
+
+<style>
+	.map-info-panel {
+		right: 0.5rem;
+		bottom: 0.5rem;
+		left: 0.5rem;
+	}
+
+	@container map-pane (min-width: 48rem) {
+		.map-info-panel {
+			right: auto;
+			left: 50%;
+			width: 20rem;
+			transform: translateX(-50%);
+		}
+	}
+</style>

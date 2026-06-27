@@ -9,13 +9,13 @@
 		flyTo,
 		selectedLocation,
 		mapView,
-		zoomTo,
 		loadedAnnotations
 	} from '$lib/store.svelte';
 	import { afterNavigate, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getProtomapsLayers, getProtomapsStyle } from '$lib/basemap';
 	import { MapCollection } from '$lib/models/MapCollection';
+	import MapControls from '$lib/components/MapControls.svelte';
 	import type { MapLocation } from '$lib/types';
 
 	let {
@@ -28,7 +28,8 @@
 		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
-		enableKeyboardToggle = false
+		enableKeyboardToggle = false,
+		controlsPosition = 'top-right'
 	}: {
 		annotation?: string;
 		opacity?: number;
@@ -37,13 +38,14 @@
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		enableKeyboardToggle?: boolean;
+		controlsPosition?: 'top-left' | 'top-right';
 	} = $props();
 
 	let actieveAnnotation = $derived(annotation);
 	let actieveOpacity = $derived((opacity ?? 100) / 100);
 
 	let mapElement: HTMLDivElement;
-	let map: maplibregl.Map;
+	let map = $state<maplibregl.Map>();
 	let mapReady: boolean = $state(false);
 	let loaded: boolean = $state(false);
 	let routerReady = false;
@@ -56,6 +58,9 @@
 	const basemapStyle = getProtomapsStyle('light');
 	const basemapLayers = getProtomapsLayers('light', undefined, {});
 	const loadedStyleImages = new Set<string>();
+	let canZoomToActiveMap = $derived(
+		loaded && !!actieveAnnotation && (mapIdsByAnnotation.get(actieveAnnotation)?.size ?? 0) > 0
+	);
 
 	afterNavigate(() => {
 		routerReady = true;
@@ -80,28 +85,14 @@
 
 	// Vlieg naar locatie
 	$effect(() => {
-		if (enableFlyTo && mapReady && flyTo.center) {
+		if (enableFlyTo && mapReady && map && flyTo.center) {
 			map.flyTo({ center: flyTo.center, zoom: 14 });
-		}
-	});
-
-	// Zoom naar geselecteerde kaart
-	$effect(() => {
-		if (loaded && zoomTo.annotation && zoomTo.annotation === actieveAnnotation) {
-			const ids = mapIdsByAnnotation.get(zoomTo.annotation);
-			if (ids) {
-				const bounds = warpedMapLayer.getMapsBounds([...ids]);
-				if (bounds) {
-					map.fitBounds(bounds, { padding: 40 });
-				}
-			}
-			zoomTo.annotation = null;
 		}
 	});
 
 	// Tijdelijke marker
 	$effect(() => {
-		if (enableLocationMarker && mapReady && selectedLocation.center) {
+		if (enableLocationMarker && mapReady && map && selectedLocation.center) {
 			const marker = new maplibregl.Marker().setLngLat(selectedLocation.center).addTo(map);
 			setTimeout(() => {
 				marker.remove();
@@ -112,7 +103,7 @@
 
 	// Synchroniseer kaartpositie met de gebonden locatie.
 	$effect(() => {
-		if (mapReady && currentLocation) {
+		if (mapReady && map && currentLocation) {
 			const center = currentLocation.center;
 			const zoom = currentLocation.zoom;
 			if (!mapMatchesLocation(center, zoom)) {
@@ -124,6 +115,7 @@
 	});
 
 	function mapMatchesLocation(center: [number, number], zoom: number) {
+		if (!map) return false;
 		const c = map.getCenter();
 		return (
 			Math.abs(c.lng - center[0]) < 0.000001 &&
@@ -133,7 +125,7 @@
 	}
 
 	function updateBrowserUrl() {
-		if (!routerReady) return;
+		if (!routerReady || !map) return;
 
 		const center = map.getCenter();
 		const params = new URLSearchParams({
@@ -149,8 +141,20 @@
 		return /^https?:\/\//.test(id) || id.startsWith('/') || id.startsWith('data:');
 	}
 
+	function zoomToActiveMap() {
+		if (!map || !actieveAnnotation) return;
+
+		const ids = mapIdsByAnnotation.get(actieveAnnotation);
+		if (!ids) return;
+
+		const bounds = warpedMapLayer.getMapsBounds([...ids]);
+		if (bounds) {
+			map.fitBounds(bounds, { padding: 40 });
+		}
+	}
+
 	onMount(() => {
-		map = new maplibregl.Map({
+		const mapInstance = new maplibregl.Map({
 			style: basemapStyle,
 			container: mapElement,
 			attributionControl: false,
@@ -158,31 +162,30 @@
 			center: currentLocation.center,
 			zoom: currentLocation.zoom
 		});
+		map = mapInstance;
 		mapReady = true;
 
-		map.addControl(new maplibregl.NavigationControl());
-
-		map.on('move', () => {
+		mapInstance.on('move', () => {
 			if (!isSyncing) {
 				currentLocation = {
-					center: map.getCenter().toArray() as [number, number],
-					zoom: map.getZoom()
+					center: mapInstance.getCenter().toArray() as [number, number],
+					zoom: mapInstance.getZoom()
 				};
 			}
 		});
 
-		map.on('moveend', () => {
-			const center = map.getCenter();
-			console.log('Kaart gestopt op:', center.lng, center.lat, 'zoom:', map.getZoom());
+		mapInstance.on('moveend', () => {
+			const center = mapInstance.getCenter();
+			console.log('Kaart gestopt op:', center.lng, center.lat, 'zoom:', mapInstance.getZoom());
 
 			if (syncUrl) {
 				updateBrowserUrl();
 			}
 		});
 
-		map.on('load', async () => {
-			basemapLayers.forEach((layer) => map.addLayer(layer, 'foreground'));
-			map.addLayer(warpedMapLayer);
+		mapInstance.on('load', async () => {
+			basemapLayers.forEach((layer) => mapInstance.addLayer(layer, 'foreground'));
+			mapInstance.addLayer(warpedMapLayer);
 			await Promise.all(
 				allMaps.map(async (mapCard) => {
 					const annotationUrl = mapCard.metadata.annotation;
@@ -201,15 +204,15 @@
 			loaded = true;
 		});
 
-		map.on('styleimagemissing', async (event) => {
+		mapInstance.on('styleimagemissing', async (event) => {
 			if (loadedStyleImages.has(event.id)) return;
 			if (!isImageUrl(event.id)) return;
 
 			loadedStyleImages.add(event.id);
 			try {
-				const image = await map.loadImage(event.id);
-				if (!map.hasImage(event.id)) {
-					map.addImage(event.id, image.data);
+				const image = await mapInstance.loadImage(event.id);
+				if (!mapInstance.hasImage(event.id)) {
+					mapInstance.addImage(event.id, image.data);
 				}
 			} catch {
 				loadedStyleImages.delete(event.id);
@@ -217,7 +220,9 @@
 		});
 
 		return () => {
-			map.remove();
+			mapInstance.remove();
+			map = undefined;
+			mapReady = false;
 		};
 	});
 
@@ -239,3 +244,12 @@
 <svelte:window on:keydown={toggleMap} on:keyup={toggleMap} />
 
 <div bind:this={mapElement} class="absolute inset-0 h-full w-full"></div>
+{#if mapReady && map}
+	<MapControls
+		{map}
+		bind:opacity
+		position={controlsPosition}
+		canZoomToMap={canZoomToActiveMap}
+		onZoomToMap={zoomToActiveMap}
+	/>
+{/if}

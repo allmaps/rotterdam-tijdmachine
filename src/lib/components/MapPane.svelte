@@ -14,6 +14,7 @@
 		}),
 		navPosition = 'left',
 		bordered = false,
+		showMapYearTicks = false,
 		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
@@ -25,21 +26,23 @@
 		currentLocation?: MapLocation;
 		navPosition?: 'left' | 'right';
 		bordered?: boolean;
+		showMapYearTicks?: boolean;
 		syncUrl?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		enableKeyboardToggle?: boolean;
 	} = $props();
 
-	let navOrderClass = $derived(navPosition === 'right' ? 'md:order-2' : 'md:order-1');
 	let mapOrderClass = $derived(navPosition === 'right' ? 'md:order-1' : 'md:order-2');
 </script>
 
 <section
-	class="flex flex-1 flex-row overflow-hidden {bordered ? 'md:border-r-2 md:border-gray-300' : ''}"
+	class="relative flex flex-1 flex-row overflow-hidden {bordered
+		? 'md:border-r-2 md:border-gray-300'
+		: ''}"
 >
-	<div class="flex-none {navOrderClass}">
-		<Slider bind:selectedYear {navPosition} />
+	<div class="absolute inset-y-0 z-20 flex-none {navPosition === 'right' ? 'right-0' : 'left-0'}">
+		<Slider bind:selectedYear {navPosition} {showMapYearTicks} />
 	</div>
 
 	<div class="relative flex-1 grow {mapOrderClass}">

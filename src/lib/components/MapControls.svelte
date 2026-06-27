@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Compass, LocateFixed, Minus, Plus, SlidersHorizontal } from '@lucide/svelte';
+	import { Compass, Focus, Minus, Plus, SlidersHorizontal } from '@lucide/svelte';
 	import type maplibregl from 'maplibre-gl';
 
 	type ControlPosition = 'top-left' | 'top-right';
@@ -7,12 +7,14 @@
 	let {
 		map,
 		opacity = $bindable(100),
+		rotateToMapOrientation = $bindable(false),
 		position = 'top-right',
 		canZoomToMap = false,
 		onZoomToMap = () => {}
 	}: {
 		map: maplibregl.Map;
 		opacity?: number;
+		rotateToMapOrientation?: boolean;
 		position?: ControlPosition;
 		canZoomToMap?: boolean;
 		onZoomToMap?: () => void;
@@ -22,7 +24,7 @@
 	const opacityPanelClass = $derived(position === 'top-left' ? 'left-0' : 'right-0');
 	let opacityOpen = $state(false);
 
-	const controls = [
+	const zoomControls = [
 		{
 			label: 'Inzoomen',
 			icon: Plus,
@@ -32,17 +34,6 @@
 			label: 'Uitzoomen',
 			icon: Minus,
 			action: () => map.zoomOut({ duration: 250 })
-		},
-		{
-			label: 'Noord boven',
-			icon: Compass,
-			action: () => map.easeTo({ bearing: 0, pitch: 0, duration: 250 })
-		},
-		{
-			label: 'Zoom naar kaartlaag',
-			icon: LocateFixed,
-			disabled: () => !canZoomToMap,
-			action: () => onZoomToMap()
 		}
 	];
 
@@ -54,6 +45,10 @@
 		if (event.key === 'Escape') {
 			opacityOpen = false;
 		}
+	}
+
+	function toggleMapOrientation() {
+		rotateToMapOrientation = !rotateToMapOrientation;
 	}
 </script>
 
@@ -69,19 +64,47 @@
 	<div
 		class="flex overflow-hidden rounded-md border border-gray-200 bg-white text-gray-800 shadow-lg"
 	>
-		{#each controls as control}
+		{#each zoomControls as control}
 			{@const Icon = control.icon}
 			<button
 				type="button"
 				aria-label={control.label}
 				title={control.label}
-				disabled={control.disabled?.() ?? false}
 				onclick={control.action}
 				class="flex h-9 w-9 items-center justify-center border-r border-gray-200 last:border-r-0 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
 			>
 				<Icon class="h-4 w-4" />
 			</button>
 		{/each}
+
+		<button
+			type="button"
+			aria-label={rotateToMapOrientation
+				? 'Kaartoriëntatie uitschakelen'
+				: 'Kaartoriëntatie volgen'}
+			title={rotateToMapOrientation
+				? 'Kaartoriëntatie uitschakelen'
+				: 'Kaartoriëntatie volgen'}
+			aria-pressed={rotateToMapOrientation}
+			disabled={!canZoomToMap}
+			onclick={toggleMapOrientation}
+			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {rotateToMapOrientation
+				? 'bg-green-700 text-white hover:bg-green-800'
+				: ''}"
+		>
+			<Compass class="h-4 w-4" />
+		</button>
+
+		<button
+			type="button"
+			aria-label="Zoom naar kaartlaag"
+			title="Zoom naar kaartlaag"
+			disabled={!canZoomToMap}
+			onclick={onZoomToMap}
+			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+		>
+			<Focus class="h-4 w-4" />
+		</button>
 
 		<button
 			type="button"

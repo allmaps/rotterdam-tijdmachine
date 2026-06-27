@@ -14,4 +14,5 @@ export type MapMetadata = {
 export type MapLocation = {
 	center: [number, number];
 	zoom: number;
+	bearing: number;
 };

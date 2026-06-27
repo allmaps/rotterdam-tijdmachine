@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Map from '$lib/components/Map.svelte';
-	import MapInfo from '$lib/components/MapInfo.svelte';
+	import MapLayers from '$lib/components/MapLayers.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import type { MapLocation } from '$lib/types';
 
@@ -10,35 +10,44 @@
 		selectedYear = $bindable(),
 		currentLocation = $bindable({
 			center: [4.4777, 51.9244] as [number, number],
-			zoom: 12
+			zoom: 12,
+			bearing: 0
 		}),
 		navPosition = 'left',
-		panelId = `map-info-panel-${navPosition}`,
+		paneSide = 'left',
+		layersId = `map-layers-${navPosition}`,
 		bordered = false,
 		showMapYearTicks = false,
 		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
-		enableKeyboardToggle = false
+		enableKeyboardToggle = false,
+		enableLayersShortcut = false,
+		showLayersPaneIndicator = false
 	}: {
 		annotation?: string;
 		opacity?: number;
 		selectedYear: number;
 		currentLocation?: MapLocation;
 		navPosition?: 'left' | 'right';
-		panelId?: string;
+		paneSide?: 'left' | 'right';
+		layersId?: string;
 		bordered?: boolean;
 		showMapYearTicks?: boolean;
 		syncUrl?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		enableKeyboardToggle?: boolean;
+		enableLayersShortcut?: boolean;
+		showLayersPaneIndicator?: boolean;
 	} = $props();
 
 	let mapOrderClass = $derived(navPosition === 'right' ? 'md:order-1' : 'md:order-2');
 	let controlsPosition: 'top-left' | 'top-right' = $derived(
 		navPosition === 'right' ? 'top-left' : 'top-right'
 	);
+	let annotationsInView = $state<string[]>([]);
+	let rotateToMapOrientation = $state(false);
 </script>
 
 <section
@@ -54,14 +63,24 @@
 		<Map
 			bind:annotation
 			bind:opacity
+			bind:rotateToMapOrientation
 			bind:currentLocation
+			bind:annotationsInView
 			{syncUrl}
 			{enableFlyTo}
 			{enableLocationMarker}
 			{enableKeyboardToggle}
 			{controlsPosition}
 		/>
-		<MapInfo bind:annotation bind:selectedYear {panelId} />
+		<MapLayers
+			bind:annotation
+			bind:selectedYear
+			{layersId}
+			{paneSide}
+			{annotationsInView}
+			enableKeyboardShortcut={enableLayersShortcut}
+			showPaneIndicator={showLayersPaneIndicator}
+		/>
 	</div>
 </section>
 

@@ -12,7 +12,8 @@
 	let shareOpen = $state(false);
 	let currentLocation = $state<MapLocation>({
 		center: [...mapView.center] as [number, number],
-		zoom: mapView.zoom
+		zoom: mapView.zoom,
+		bearing: mapView.bearing
 	});
 	let compareStacked = $state(false);
 
@@ -29,6 +30,7 @@
 	$effect(() => {
 		mapView.center = currentLocation.center;
 		mapView.zoom = currentLocation.zoom;
+		mapView.bearing = currentLocation.bearing;
 	});
 
 	function yearForAnnotation(annotation: string) {
@@ -41,6 +43,7 @@
 		const lat = params.get('lat');
 		const lng = params.get('lng');
 		const zoom = params.get('zoom');
+		const bearing = params.get('bearing');
 		const year = params.get('year');
 
 		function syncCompareStacked(event: MediaQueryList | MediaQueryListEvent) {
@@ -53,7 +56,8 @@
 		if (lat && lng) {
 			currentLocation = {
 				center: [parseFloat(lng), parseFloat(lat)],
-				zoom: zoom ? parseFloat(zoom) : currentLocation.zoom
+				zoom: zoom ? parseFloat(zoom) : currentLocation.zoom,
+				bearing: bearing ? parseFloat(bearing) : currentLocation.bearing
 			};
 		}
 
@@ -81,7 +85,8 @@
 	>
 		<MapPane
 			navPosition={leftNavPosition}
-			panelId="map-info-panel-left"
+			paneSide="left"
+			layersId="map-layers-left"
 			bordered={comparison.active}
 			bind:annotation={viewState.annotation}
 			bind:opacity={viewState.opacity}
@@ -91,16 +96,20 @@
 			enableFlyTo
 			enableLocationMarker
 			enableKeyboardToggle
+			enableLayersShortcut
+			showLayersPaneIndicator={comparison.active}
 		/>
 
 		{#if comparison.active}
 			<MapPane
 				navPosition="right"
-				panelId="map-info-panel-right"
+				paneSide="right"
+				layersId="map-layers-right"
 				bind:annotation={comparison.rightAnnotation}
 				bind:opacity={comparison.rightOpacity}
 				bind:selectedYear={rightSelectedYear}
 				bind:currentLocation
+				showLayersPaneIndicator
 			/>
 		{/if}
 	</div>

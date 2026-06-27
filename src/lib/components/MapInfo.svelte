@@ -122,7 +122,7 @@
 		>
 			<div class="mb-2 flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-m font-bolder font-semibold">Kaartlagen</p>
+					<p class="text-m font-semibold">Kaartlagen</p>
 				</div>
 				<div class="flex flex-none items-start gap-2">
 					{#if selectedYear !== resolvedYear}
@@ -171,9 +171,9 @@
 					</button>
 				{/each}
 			</div>
-			<div class="mt-3 pt-2 leading-4">
-				<p class="text-m mb-3 font-bolder font-light">Achtergrondkaart</p>
-				<p class="text-xs font-light break-words">
+			<div class="text-xs leading-4 font-light">
+				<p class=" break-words">
+					Achtergrondkaart:
 					<a
 						class=" hover:text-gray-800"
 						href="https://github.com/protomaps/basemaps"

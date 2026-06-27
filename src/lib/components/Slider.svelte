@@ -42,8 +42,8 @@
 	}
 </script>
 
-<aside class="z-20 flex h-full flex-none flex-col font-bolder text-gray-800">
-	<div class="relative min-h-0 flex-1 pb-20 md:pb-0">
+<aside class="z-20 flex h-full flex-none flex-col pb-20 font-bolder text-gray-800 md:pb-0">
+	<div class="relative min-h-0 flex-1">
 		<BitsSlider.Root
 			type="single"
 			bind:value={selectedYear}
@@ -52,13 +52,13 @@
 			step={1}
 			orientation="vertical"
 			class="relative flex h-full w-full touch-none flex-col select-none"
-			trackPadding={3}
+			trackPadding={5}
 		>
 			{#snippet children({ tickItems })}
 				<span
-					class="absolute z-5 h-full w-24 cursor-pointer overflow-hidden bg-transparent md:bg-white/80 {sliderSurfaceClass}"
+					class="absolute z-5 hidden h-full w-24 cursor-pointer overflow-hidden bg-transparent md:inline md:bg-white/80 {sliderSurfaceClass}"
 				>
-					<BitsSlider.Range class="w-ful absolute" />
+					<BitsSlider.Range class="absolute w-full" />
 				</span>
 
 				<BitsSlider.Thumb

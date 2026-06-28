@@ -14,7 +14,7 @@
 		mapIdsByAnnotation
 	} from '$lib/shared/warped-map-list';
 	import MapControls from '$lib/components/MapControls.svelte';
-	import type { MapKeyboardCommand, MapLocation } from '$lib/types';
+	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
 
 	let {
 		annotation = $bindable(viewState.annotation),
@@ -29,6 +29,7 @@
 		}),
 		annotationsInView = $bindable<string[]>([]),
 		mapKeyboardCommand,
+		mapToolbarCommand,
 		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
@@ -42,6 +43,7 @@
 		currentLocation?: MapLocation;
 		annotationsInView?: string[];
 		mapKeyboardCommand?: MapKeyboardCommand;
+		mapToolbarCommand?: MapToolbarCommand;
 		syncUrl?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
@@ -68,6 +70,8 @@
 	let previousRotateToMapOrientationForFocus = rotateToMapOrientation;
 	let previousFocusActiveMap = focusActiveMap;
 	let previousKeyboardCommandId = 0;
+	let previousToolbarCommandId = 0;
+	let commandIdsInitialized = false;
 	let visibilityCheckFrame: number | undefined;
 	let urlSyncFrame: number | undefined;
 	let isSyncing = false;
@@ -198,6 +202,14 @@
 	});
 
 	$effect(() => {
+		if (commandIdsInitialized) return;
+
+		previousKeyboardCommandId = mapKeyboardCommand?.id ?? 0;
+		previousToolbarCommandId = mapToolbarCommand?.id ?? 0;
+		commandIdsInitialized = true;
+	});
+
+	$effect(() => {
 		const command = mapKeyboardCommand;
 		if (!mapReady || !map || !command || command.id === previousKeyboardCommandId) return;
 
@@ -217,6 +229,28 @@
 			pitch: 0,
 			offset: command.offset ?? [0, 0]
 		});
+	});
+
+	$effect(() => {
+		const command = mapToolbarCommand;
+		if (!command || command.id === previousToolbarCommandId) return;
+
+		previousToolbarCommandId = command.id;
+
+		if (command.action === 'toggle-in-view') {
+			if (inViewOnly || annotationsInView.length > 0) {
+				inViewOnly = !inViewOnly;
+			}
+			return;
+		}
+
+		if (!canZoomToActiveMap) return;
+
+		if (command.action === 'toggle-rotation') {
+			rotateToMapOrientation = !rotateToMapOrientation;
+		} else if (command.action === 'toggle-focus') {
+			focusActiveMap = !focusActiveMap;
+		}
 	});
 
 	function mapMatchesLocation(center: [number, number], zoom: number, bearing: number) {

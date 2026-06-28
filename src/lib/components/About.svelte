@@ -112,6 +112,27 @@
 
 				<div class="grid grid-cols-[auto_1fr] items-center gap-3">
 					<dt class="flex items-center gap-1.5">
+						<kbd class={keyClass}>F</kbd>
+					</dt>
+					<dd>Filter op kaarten in beeld aan- of uitzetten</dd>
+				</div>
+
+				<div class="grid grid-cols-[auto_1fr] items-center gap-3">
+					<dt class="flex items-center gap-1.5">
+						<kbd class={keyClass}>R</kbd>
+					</dt>
+					<dd>Kaartoriëntatie volgen aan- of uitzetten</dd>
+				</div>
+
+				<div class="grid grid-cols-[auto_1fr] items-center gap-3">
+					<dt class="flex items-center gap-1.5">
+						<kbd class={keyClass}>Z</kbd>
+					</dt>
+					<dd>Kaartlaagfocus volgen aan- of uitzetten</dd>
+				</div>
+
+				<div class="grid grid-cols-[auto_1fr] items-center gap-3">
+					<dt class="flex items-center gap-1.5">
 						<kbd class={wideKeyClass}>Spatie</kbd>
 					</dt>
 					<dd>Historische kaartlagen tijdelijk verbergen</dd>

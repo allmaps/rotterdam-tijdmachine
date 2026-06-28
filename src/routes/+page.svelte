@@ -6,7 +6,7 @@
 	import { onMount } from 'svelte';
 	import data from '$lib/content/data';
 	import { comparison, mapView, viewState } from '$lib/store.svelte';
-	import type { MapKeyboardCommand, MapLocation } from '$lib/types';
+	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
 
 	const DEFAULT_YEAR = 1897;
 	const KEYBOARD_PAN_PIXELS = 100;
@@ -24,7 +24,9 @@
 	let compareStacked = $state(false);
 	let panesReady = $state(false);
 	let mapKeyboardCommand = $state<MapKeyboardCommand>();
+	let mapToolbarCommand = $state<MapToolbarCommand>();
 	let keyboardCommandId = 0;
+	let toolbarCommandId = 0;
 	let opacityShortcutSnapshot:
 		| {
 				left: number;
@@ -103,6 +105,13 @@
 		};
 	}
 
+	function dispatchMapToolbarCommand(action: MapToolbarCommand['action']) {
+		mapToolbarCommand = {
+			id: ++toolbarCommandId,
+			action
+		};
+	}
+
 	function hasOpenModal() {
 		return !!document.querySelector('[role="dialog"][aria-modal="true"]');
 	}
@@ -137,9 +146,34 @@
 			return;
 		}
 
-		if (handleMapNavigationKeydown(event)) {
+		if (handleMapToolbarKeydown(event) || handleMapNavigationKeydown(event)) {
 			event.preventDefault();
 		}
+	}
+
+	function handleMapToolbarKeydown(event: KeyboardEvent) {
+		if (event.repeat || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+			return false;
+		}
+
+		const key = event.key.toLowerCase();
+
+		if (key === 'f') {
+			dispatchMapToolbarCommand('toggle-in-view');
+			return true;
+		}
+
+		if (key === 'r') {
+			dispatchMapToolbarCommand('toggle-rotation');
+			return true;
+		}
+
+		if (key === 'z') {
+			dispatchMapToolbarCommand('toggle-focus');
+			return true;
+		}
+
+		return false;
 	}
 
 	function handleMapNavigationKeydown(event: KeyboardEvent) {
@@ -252,6 +286,7 @@
 				bind:selectedYear
 				bind:currentLocation
 				{mapKeyboardCommand}
+				{mapToolbarCommand}
 				syncUrl
 				enableFlyTo
 				enableLocationMarker

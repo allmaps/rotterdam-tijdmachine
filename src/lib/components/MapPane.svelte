@@ -2,7 +2,7 @@
 	import Map from '$lib/components/Map.svelte';
 	import MapLayers from '$lib/components/MapLayers.svelte';
 	import Slider from '$lib/components/Slider.svelte';
-	import type { MapKeyboardCommand, MapLocation } from '$lib/types';
+	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
 
 	let {
 		annotation = $bindable(''),
@@ -15,6 +15,7 @@
 			bearing: 0
 		}),
 		navPosition = 'left',
+		mapToolbarCommand,
 		paneSide = 'left',
 		layersId = `map-layers-${navPosition}`,
 		bordered = false,
@@ -31,6 +32,7 @@
 		mapKeyboardCommand?: MapKeyboardCommand;
 		currentLocation?: MapLocation;
 		navPosition?: 'left' | 'right';
+		mapToolbarCommand?: MapToolbarCommand;
 		paneSide?: 'left' | 'right';
 		layersId?: string;
 		bordered?: boolean;
@@ -78,6 +80,7 @@
 			bind:currentLocation
 			bind:annotationsInView
 			{mapKeyboardCommand}
+			{mapToolbarCommand}
 			{syncUrl}
 			{enableFlyTo}
 			{enableLocationMarker}

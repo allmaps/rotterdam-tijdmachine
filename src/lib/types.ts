@@ -23,3 +23,8 @@ export type MapKeyboardCommand = {
 	zoomDelta?: number;
 	bearingDelta?: number;
 };
+
+export type MapToolbarCommand = {
+	id: number;
+	action: 'toggle-in-view' | 'toggle-rotation' | 'toggle-focus';
+};

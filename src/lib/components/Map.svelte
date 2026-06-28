@@ -1,37 +1,89 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import maplibregl from 'maplibre-gl';
 	import { WarpedMapLayer } from '@allmaps/maplibre';
+	import { AlertTriangle, Focus } from '@lucide/svelte';
 	import 'maplibre-gl/dist/maplibre-gl.css';
-	import { viewState, flyTo, selectedLocation, mapView, zoomTo, loadedAnnotations } from '$lib/store.svelte';
+	import { viewState, flyTo, selectedLocation, mapView } from '$lib/store.svelte';
 	import { replaceState } from '$app/navigation';
-	import { MapCollection } from '$lib/models/MapCollection';
+	import { resolve } from '$app/paths';
+	import { getProtomapsLayers, getProtomapsStyle } from '$lib/basemap';
+	import {
+		annotationsByMapId,
+		getWarpedMapList,
+		mapIdsByAnnotation
+	} from '$lib/shared/warped-map-list';
+	import MapControls from '$lib/components/MapControls.svelte';
+	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
 
-	// Optionele props — als ze meegegeven worden, is het vergelijkingsmodus
 	let {
-		annotation = undefined,
-		opacity = undefined
+		annotation = $bindable(viewState.annotation),
+		opacity = $bindable(viewState.opacity),
+		rotateToMapOrientation = $bindable(false),
+		focusActiveMap = $bindable(false),
+		inViewOnly = $bindable(false),
+		currentLocation = $bindable({
+			center: [...mapView.center] as [number, number],
+			zoom: mapView.zoom,
+			bearing: mapView.bearing
+		}),
+		annotationsInView = $bindable<string[]>([]),
+		mapKeyboardCommand,
+		mapToolbarCommand,
+		syncUrl = false,
+		enableFlyTo = false,
+		enableLocationMarker = false,
+		controlsPosition = 'top-right'
 	}: {
 		annotation?: string;
 		opacity?: number;
+		rotateToMapOrientation?: boolean;
+		focusActiveMap?: boolean;
+		inViewOnly?: boolean;
+		currentLocation?: MapLocation;
+		annotationsInView?: string[];
+		mapKeyboardCommand?: MapKeyboardCommand;
+		mapToolbarCommand?: MapToolbarCommand;
+		syncUrl?: boolean;
+		enableFlyTo?: boolean;
+		enableLocationMarker?: boolean;
+		controlsPosition?: 'top-left' | 'top-right';
 	} = $props();
 
-	// Vergelijkingsmodus als annotation prop meegegeven is
-	let isVergelijken = $derived(annotation !== undefined);
-
-	// Gebruik props in vergelijkingsmodus, anders de store
-	let actieveAnnotation = $derived(isVergelijken ? annotation : viewState.annotation);
-	let actieveOpacity = $derived((isVergelijken ? (opacity ?? 100) : viewState.opacity) / 100);
+	let actieveAnnotation = $derived(annotation);
+	let actieveOpacity = $derived((opacity ?? 100) / 100);
 
 	let mapElement: HTMLDivElement;
-	let map: any;
+	let map = $state<maplibregl.Map>();
+	let mapReady: boolean = $state(false);
 	let loaded: boolean = $state(false);
+	let selectedMapVisibility = $state<
+		'fully-visible' | 'partly-visible' | 'not-visible' | 'unknown'
+	>('unknown');
+	let visibilityWarningOpen = $state(false);
+	let visibilityWarningPrimaryButton: HTMLButtonElement | undefined = $state();
+	let dismissedVisibilityWarningAnnotation: string | undefined;
+	let previousAnnotationForVisibility: string | undefined;
+	let previousAnnotationForOrientation: string | undefined;
+	let previousAnnotationForFocus: string | undefined;
+	let previousRotateToMapOrientation = rotateToMapOrientation;
+	let previousRotateToMapOrientationForFocus = rotateToMapOrientation;
+	let previousFocusActiveMap = focusActiveMap;
+	let previousKeyboardCommandId = 0;
+	let previousToolbarCommandId = 0;
+	let commandIdsInitialized = false;
+	let visibilityCheckFrame: number | undefined;
+	let urlSyncFrame: number | undefined;
 	let isSyncing = false;
-	let warpedMapLayer = new WarpedMapLayer({ visible: false });
+	let warpedMapList = getWarpedMapList();
+	let warpedMapLayer = new WarpedMapLayer({ visible: false, warpedMapList });
 
-	const collection = new MapCollection();
-	const allMaps = collection.getAllMaps();
-	const mapIdsByAnnotation = new Map<string, Set<string>>();
+	const basemapStyle = getProtomapsStyle('light');
+	const basemapLayers = getProtomapsLayers('light', undefined, {});
+	const loadedStyleImages = new Set<string>();
+	let canZoomToActiveMap = $derived(
+		loaded && !!actieveAnnotation && (mapIdsByAnnotation.get(actieveAnnotation)?.size ?? 0) > 0
+	);
 
 	// Laad de kaartlaag als de annotatie verandert
 	$effect(() => {
@@ -43,6 +95,12 @@
 		}
 	});
 
+	$effect(() => {
+		if (syncUrl && mapReady && map && actieveAnnotation) {
+			queueBrowserUrlUpdate();
+		}
+	});
+
 	// Pas transparantie aan
 	$effect(() => {
 		if (loaded) {
@@ -50,30 +108,16 @@
 		}
 	});
 
-	// Vlieg naar locatie (alleen normale modus)
+	// Vlieg naar locatie
 	$effect(() => {
-		if (!isVergelijken && loaded && flyTo.center) {
+		if (enableFlyTo && mapReady && map && flyTo.center) {
 			map.flyTo({ center: flyTo.center, zoom: 14 });
 		}
 	});
 
-	// Zoom naar geselecteerde kaart
+	// Tijdelijke marker
 	$effect(() => {
-		if (loaded && zoomTo.annotation && zoomTo.annotation === actieveAnnotation) {
-			const ids = mapIdsByAnnotation.get(zoomTo.annotation);
-			if (ids) {
-				const bounds = warpedMapLayer.getMapsBounds([...ids]);
-				if (bounds) {
-					map.fitBounds(bounds, { padding: 40 });
-				}
-			}
-			zoomTo.annotation = null;
-		}
-	});
-
-	// Tijdelijke marker (alleen normale modus)
-	$effect(() => {
-		if (!isVergelijken && loaded && selectedLocation.center) {
+		if (enableLocationMarker && mapReady && map && selectedLocation.center) {
 			const marker = new maplibregl.Marker().setLngLat(selectedLocation.center).addTo(map);
 			setTimeout(() => {
 				marker.remove();
@@ -82,91 +126,493 @@
 		}
 	});
 
-	// Synchroniseer kaarten in vergelijkingsmodus
+	// Synchroniseer kaartpositie met de gebonden locatie.
 	$effect(() => {
-		if (isVergelijken && loaded) {
-			const center = mapView.center;
-			const zoom = mapView.zoom;
-			const c = map.getCenter();
-			if (c.lng !== center[0] || c.lat !== center[1] || map.getZoom() !== zoom) {
+		if (mapReady && map && currentLocation) {
+			const center = currentLocation.center;
+			const zoom = currentLocation.zoom;
+			const bearing = currentLocation.bearing ?? 0;
+			if (!mapMatchesLocation(center, zoom, bearing)) {
 				isSyncing = true;
-				map.jumpTo({ center, zoom });
+				map.jumpTo({ center, zoom, bearing });
 				isSyncing = false;
 			}
 		}
 	});
 
-	onMount(async () => {
-		map = new maplibregl.Map({
-			style: 'https://tiles.openfreemap.org/styles/liberty',
-			container: mapElement,
-			maxPitch: 0,
-			center: mapView.center,
-			zoom: mapView.zoom
-		});
+	// Waarschuw pas bij selectie/laden; gewone kaartbewegingen mogen niet blijven storen.
+	$effect(() => {
+		const annotationForCheck = actieveAnnotation;
+		if (annotationForCheck !== previousAnnotationForVisibility) {
+			previousAnnotationForVisibility = annotationForCheck;
+			dismissedVisibilityWarningAnnotation = undefined;
+			visibilityWarningOpen = false;
+		}
 
-		map.addControl(new maplibregl.NavigationControl());
+		if (loaded && mapReady && map && annotationForCheck) {
+			queueSelectedMapVisibilityCheck(annotationForCheck, true);
+		} else {
+			selectedMapVisibility = 'unknown';
+			visibilityWarningOpen = false;
+		}
+	});
 
-		map.on('move', () => {
-			if (!isSyncing) {
-				mapView.center = map.getCenter().toArray() as [number, number];
-				mapView.zoom = map.getZoom();
-			}
-		});
+	$effect(() => {
+		if (visibilityWarningOpen) {
+			tick().then(() => visibilityWarningPrimaryButton?.focus());
+		}
+	});
 
-		map.on('moveend', () => {
-			const center = map.getCenter();
-			console.log('Kaart gestopt op:', center.lng, center.lat, 'zoom:', map.getZoom());
+	$effect(() => {
+		const shouldRotate = rotateToMapOrientation;
+		const annotationForOrientation = actieveAnnotation;
+		if (!loaded || !mapReady || !map) return;
 
-			// URL bijwerken (alleen normale modus)
-			if (!isVergelijken) {
-				const params = new URLSearchParams({
-					lat: center.lat.toFixed(5),
-					lng: center.lng.toFixed(5),
-					zoom: map.getZoom().toFixed(2),
-					year: String(viewState.annotation)
-				});
-				replaceState('?' + params.toString(), {});
-			}
-		});
+		const orientationChanged = shouldRotate !== previousRotateToMapOrientation;
+		const annotationChanged = annotationForOrientation !== previousAnnotationForOrientation;
+		previousRotateToMapOrientation = shouldRotate;
+		previousAnnotationForOrientation = annotationForOrientation;
 
-		map.on('load', async () => {
-			map.addLayer(warpedMapLayer);
-			await Promise.all(
-				allMaps.map(async (mapCard) => {
-					const annotationUrl = mapCard.metadata.annotation;
-					try {
-						const ids = await warpedMapLayer.addGeoreferenceAnnotationByUrl(annotationUrl);
-						const stringIds = ids.filter((id): id is string => typeof id === 'string');
-						if (stringIds.length > 0) {
-							mapIdsByAnnotation.set(annotationUrl, new Set(stringIds));
-							loadedAnnotations.add(annotationUrl);
-						}
-					} catch {
-						console.warn('Kon annotatie niet laden:', annotationUrl);
-					}
-				})
-			);
-			loaded = true;
+		if (!orientationChanged && !annotationChanged) return;
+
+		if (shouldRotate && annotationForOrientation) {
+			rotateToSelectedMapOrientation(annotationForOrientation);
+		} else if (orientationChanged) {
+			map.easeTo({ bearing: 0, pitch: 0, duration: 250 });
+		}
+	});
+
+	$effect(() => {
+		const shouldFocus = focusActiveMap;
+		const shouldRotate = rotateToMapOrientation;
+		const annotationForFocus = actieveAnnotation;
+		if (!loaded || !mapReady || !map) return;
+
+		const focusChanged = shouldFocus !== previousFocusActiveMap;
+		const orientationChanged = shouldRotate !== previousRotateToMapOrientationForFocus;
+		const annotationChanged = annotationForFocus !== previousAnnotationForFocus;
+		previousFocusActiveMap = shouldFocus;
+		previousRotateToMapOrientationForFocus = shouldRotate;
+		previousAnnotationForFocus = annotationForFocus;
+
+		if (!shouldFocus || !annotationForFocus) return;
+		if (focusChanged || orientationChanged || annotationChanged) {
+			focusSelectedMap(annotationForFocus);
+		}
+	});
+
+	$effect(() => {
+		if (commandIdsInitialized) return;
+
+		previousKeyboardCommandId = mapKeyboardCommand?.id ?? 0;
+		previousToolbarCommandId = mapToolbarCommand?.id ?? 0;
+		commandIdsInitialized = true;
+	});
+
+	$effect(() => {
+		const command = mapKeyboardCommand;
+		if (!mapReady || !map || !command || command.id === previousKeyboardCommandId) return;
+
+		previousKeyboardCommandId = command.id;
+		map.easeTo({
+			duration: 300,
+			easeId: 'keyboardHandler',
+			center: map.getCenter(),
+			zoom:
+				command.zoomDelta === undefined
+					? map.getZoom()
+					: map.getZoom() + command.zoomDelta,
+			bearing:
+				command.bearingDelta === undefined
+					? map.getBearing()
+					: map.getBearing() + command.bearingDelta,
+			pitch: 0,
+			offset: command.offset ?? [0, 0]
 		});
 	});
 
-	// Toetsenbord toggle (alleen normale modus)
-	let previousOpacity: number | undefined;
-	function toggleMap(event: KeyboardEvent) {
-		if (isVergelijken || event.repeat) return;
-		if (event.code === 'Space') {
-			if (previousOpacity === undefined) {
-				previousOpacity = viewState.opacity;
-				viewState.opacity = 0;
-			} else {
-				viewState.opacity = previousOpacity;
-				previousOpacity = undefined;
+	$effect(() => {
+		const command = mapToolbarCommand;
+		if (!command || command.id === previousToolbarCommandId) return;
+
+		previousToolbarCommandId = command.id;
+
+		if (command.action === 'toggle-in-view') {
+			if (inViewOnly || annotationsInView.length > 0) {
+				inViewOnly = !inViewOnly;
 			}
+			return;
+		}
+
+		if (!canZoomToActiveMap) return;
+
+		if (command.action === 'toggle-rotation') {
+			rotateToMapOrientation = !rotateToMapOrientation;
+		} else if (command.action === 'toggle-focus') {
+			focusActiveMap = !focusActiveMap;
+		}
+	});
+
+	function mapMatchesLocation(center: [number, number], zoom: number, bearing: number) {
+		if (!map) return false;
+		const c = map.getCenter();
+		return (
+			Math.abs(c.lng - center[0]) < 0.000001 &&
+			Math.abs(c.lat - center[1]) < 0.000001 &&
+			Math.abs(map.getZoom() - zoom) < 0.000001 &&
+			bearingDifference(map.getBearing(), bearing) < 0.000001
+		);
+	}
+
+	function bearingDifference(a: number, b: number) {
+		return Math.abs(((a - b + 540) % 360) - 180);
+	}
+
+	function updateBrowserUrl() {
+		if (!map) return;
+
+		const center = map.getCenter();
+		const params = new URLSearchParams({
+			lat: center.lat.toFixed(5),
+			lng: center.lng.toFixed(5),
+			zoom: map.getZoom().toFixed(2),
+			year: String(actieveAnnotation)
+		});
+		const bearing = map.getBearing();
+		if (bearingDifference(bearing, 0) >= 0.005) {
+			params.set('bearing', bearing.toFixed(2));
+		}
+		replaceBrowserUrl(resolve(`/?${params.toString()}`));
+	}
+
+	function queueBrowserUrlUpdate() {
+		if (urlSyncFrame !== undefined) {
+			cancelAnimationFrame(urlSyncFrame);
+		}
+
+		urlSyncFrame = requestAnimationFrame(() => {
+			urlSyncFrame = undefined;
+			updateBrowserUrl();
+		});
+	}
+
+	function replaceBrowserUrl(url: string, retry = true) {
+		try {
+			replaceState(url, {});
+		} catch (error) {
+			if (
+				retry &&
+				error instanceof Error &&
+				error.message.includes('before router is initialized')
+			) {
+				requestAnimationFrame(() => replaceBrowserUrl(url, false));
+			} else {
+				console.warn('Kon URL niet bijwerken:', error);
+			}
+		}
+	}
+
+	function isImageUrl(id: string) {
+		return /^https?:\/\//.test(id) || id.startsWith('/') || id.startsWith('data:');
+	}
+
+	function focusSelectedMap(annotationForFocus = actieveAnnotation) {
+		if (!map || !annotationForFocus) return;
+
+		if (rotateToMapOrientation) {
+			const camera = getSelectedMapCamera(annotationForFocus);
+			if (camera) {
+				map.easeTo({ ...camera, pitch: 0, duration: 350 });
+				return;
+			}
+		}
+
+		const bounds = getSelectedMapBounds(annotationForFocus);
+		if (bounds) {
+			map.fitBounds(bounds, { padding: 40 });
+		}
+	}
+
+	function rotateToSelectedMapOrientation(annotationForOrientation: string) {
+		if (!map) return;
+
+		const camera = getSelectedMapCamera(annotationForOrientation);
+		if (camera?.bearing !== undefined) {
+			map.easeTo({ bearing: camera.bearing, pitch: 0, duration: 250 });
+		}
+	}
+
+	function queueSelectedMapVisibilityCheck(annotationForCheck: string, showWarning = false) {
+		if (visibilityCheckFrame !== undefined) {
+			cancelAnimationFrame(visibilityCheckFrame);
+		}
+
+		visibilityCheckFrame = requestAnimationFrame(() => {
+			visibilityCheckFrame = undefined;
+			checkSelectedMapVisibility(annotationForCheck, showWarning);
+		});
+	}
+
+	function getSelectedMapBounds(annotationForCheck: string) {
+		const ids = getSelectedMapIds(annotationForCheck);
+		if (!ids) return undefined;
+
+		return warpedMapLayer.getMapsBounds(ids);
+	}
+
+	function getSelectedMapIds(annotationForCheck: string) {
+		const ids = mapIdsByAnnotation.get(annotationForCheck);
+		if (!ids?.size) return undefined;
+
+		return [...ids];
+	}
+
+	function getSelectedMapCamera(annotationForCheck: string) {
+		const ids = getSelectedMapIds(annotationForCheck);
+		if (!ids) return undefined;
+
+		try {
+			return warpedMapLayer.getMapsCenterZoomBearing(ids, { padding: 40 });
+		} catch (error) {
+			console.warn('Kon kaartoriëntatie niet bepalen:', error);
+			return undefined;
+		}
+	}
+
+	function getSelectedMapVisibility(annotationForCheck: string) {
+		if (!map) return 'unknown';
+
+		const bounds = getSelectedMapBounds(annotationForCheck);
+		if (!bounds) return 'unknown';
+
+		const viewportBounds = map.getBounds();
+		const selectedBounds = maplibregl.LngLatBounds.convert(bounds);
+		const selectedBoundsCorners = [
+			selectedBounds.getSouthWest(),
+			selectedBounds.getNorthWest(),
+			selectedBounds.getNorthEast(),
+			selectedBounds.getSouthEast()
+		];
+		const fullyVisible = selectedBoundsCorners.every((corner) => viewportBounds.contains(corner));
+
+		if (fullyVisible) return 'fully-visible';
+		if (viewportBounds.intersects(selectedBounds)) return 'partly-visible';
+
+		return 'not-visible';
+	}
+
+	function checkSelectedMapVisibility(annotationForCheck = actieveAnnotation, showWarning = false) {
+		if (!annotationForCheck || annotationForCheck !== actieveAnnotation) return;
+
+		selectedMapVisibility = getSelectedMapVisibility(annotationForCheck);
+
+		if (selectedMapVisibility === 'fully-visible') {
+			visibilityWarningOpen = false;
+			return;
+		}
+
+		if (
+			showWarning &&
+			selectedMapVisibility === 'not-visible' &&
+			// (selectedMapVisibility === 'partly-visible' || selectedMapVisibility === 'not-visible') &&
+			dismissedVisibilityWarningAnnotation !== annotationForCheck
+		) {
+			visibilityWarningOpen = true;
+		}
+	}
+
+	function dismissVisibilityWarning() {
+		dismissedVisibilityWarningAnnotation = actieveAnnotation;
+		visibilityWarningOpen = false;
+	}
+
+	function zoomToActiveMapFromWarning() {
+		dismissVisibilityWarning();
+		focusSelectedMap();
+	}
+
+	function handleVisibilityWarningKeydown(event: KeyboardEvent) {
+		event.stopPropagation();
+
+		if (event.key === 'Escape') {
+			dismissVisibilityWarning();
+		}
+	}
+
+	function updateAnnotationsInView() {
+		if (!map || !loaded) {
+			annotationsInView = [];
+			return;
+		}
+
+		const center = map.getCenter();
+		const geoPoint: [number, number] = [center.lng, center.lat];
+		const mapIds = warpedMapLayer.getWarpedMapList().getMapIds({
+			geoPoint,
+			onlyVisible: false
+		});
+		const nextAnnotationsInView = [
+			...new Set(
+				mapIds
+					.map((mapId) => annotationsByMapId.get(mapId))
+					.filter((annotationUrl): annotationUrl is string => !!annotationUrl)
+			)
+		];
+
+		annotationsInView = nextAnnotationsInView;
+	}
+
+	onMount(() => {
+		const mapInstance = new maplibregl.Map({
+			style: basemapStyle,
+			container: mapElement,
+			attributionControl: false,
+			maxPitch: 0,
+			center: currentLocation.center,
+			zoom: currentLocation.zoom,
+			bearing: currentLocation.bearing ?? 0,
+			bearingSnap: 0,
+			keyboard: false
+		});
+		map = mapInstance;
+		mapReady = true;
+
+		mapInstance.on('move', () => {
+			if (!isSyncing) {
+				currentLocation = {
+					center: mapInstance.getCenter().toArray() as [number, number],
+					zoom: mapInstance.getZoom(),
+					bearing: mapInstance.getBearing()
+				};
+			}
+		});
+
+		mapInstance.on('moveend', () => {
+			const center = mapInstance.getCenter();
+			console.log('Kaart gestopt op:', center.lng, center.lat, 'zoom:', mapInstance.getZoom());
+			updateAnnotationsInView();
+			checkSelectedMapVisibility(actieveAnnotation, false);
+
+			if (syncUrl) {
+				updateBrowserUrl();
+			}
+		});
+
+		mapInstance.on('load', async () => {
+			basemapLayers.forEach((layer) => mapInstance.addLayer(layer, 'foreground'));
+			mapInstance.addLayer(warpedMapLayer);
+			loaded = true;
+			updateAnnotationsInView();
+		});
+
+		mapInstance.on('styleimagemissing', async (event) => {
+			if (loadedStyleImages.has(event.id)) return;
+			if (!isImageUrl(event.id)) return;
+
+			loadedStyleImages.add(event.id);
+			try {
+				const image = await mapInstance.loadImage(event.id);
+				if (!mapInstance.hasImage(event.id)) {
+					mapInstance.addImage(event.id, image.data);
+				}
+			} catch {
+				loadedStyleImages.delete(event.id);
+			}
+		});
+
+		return () => {
+			if (visibilityCheckFrame !== undefined) {
+				cancelAnimationFrame(visibilityCheckFrame);
+			}
+			if (urlSyncFrame !== undefined) {
+				cancelAnimationFrame(urlSyncFrame);
+			}
+			mapInstance.remove();
+			annotationsInView = [];
+			map = undefined;
+			mapReady = false;
+		};
+	});
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && visibilityWarningOpen) {
+			dismissVisibilityWarning();
 		}
 	}
 </script>
 
-<svelte:window on:keydown={toggleMap} on:keyup={toggleMap} />
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <div bind:this={mapElement} class="absolute inset-0 h-full w-full"></div>
+{#if mapReady && map}
+	<MapControls
+		{map}
+		bind:opacity
+		bind:rotateToMapOrientation
+		bind:focusActiveMap
+		bind:inViewOnly
+		position={controlsPosition}
+		canZoomToMap={canZoomToActiveMap}
+		canFilterInView={annotationsInView.length > 0}
+	/>
+{/if}
+
+{#if visibilityWarningOpen}
+	<div
+		role="presentation"
+		class="absolute inset-0 z-40 flex items-center justify-center bg-black/25 p-4"
+		onpointerdown={(event) => event.stopPropagation()}
+		ondblclick={(event) => event.stopPropagation()}
+	>
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-label="Waarschuwing kaartlaag"
+			tabindex="-1"
+			class="pointer-events-auto w-full max-w-sm rounded-lg border border-gray-200 bg-white p-4 text-gray-900 shadow-2xl"
+			onkeydown={handleVisibilityWarningKeydown}
+			onkeyup={(event) => event.stopPropagation()}
+			onpointerdown={(event) => event.stopPropagation()}
+			ondblclick={(event) => event.stopPropagation()}
+		>
+			<div class="flex items-start gap-3">
+				<div
+					class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-full bg-amber-100 text-amber-700"
+				>
+					<AlertTriangle class="h-5 w-5" />
+				</div>
+				<div class="min-w-0">
+					<h2 class="font-heading text-base font-bold">
+						{selectedMapVisibility === 'not-visible'
+							? 'Kaartlaag buiten beeld'
+							: 'Kaartlaag deels zichtbaar'}
+					</h2>
+					<p class="mt-1 text-sm leading-5 text-gray-600">
+						{selectedMapVisibility === 'not-visible'
+							? 'De geselecteerde kaartlaag ligt niet in de huidige kaartuitsnede.'
+							: 'De geselecteerde kaartlaag is maar gedeeltelijk zichtbaar in de huidige kaartuitsnede.'}
+					</p>
+				</div>
+			</div>
+
+			<div class="mt-4 flex justify-end gap-2">
+				<button
+					type="button"
+					class="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+					onclick={dismissVisibilityWarning}
+				>
+					Laat zo
+				</button>
+				<button
+					bind:this={visibilityWarningPrimaryButton}
+					type="button"
+					class="inline-flex items-center gap-2 rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+					onclick={zoomToActiveMapFromWarning}
+				>
+					<Focus class="h-4 w-4" />
+					Zoom naar kaartlaag
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

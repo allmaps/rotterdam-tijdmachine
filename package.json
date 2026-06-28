@@ -36,8 +36,13 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"@allmaps/annotation": "1.0.0-beta.37",
 		"@allmaps/maplibre": "1.0.0-beta.43",
+		"@allmaps/render": "1.0.0-beta.83",
+		"@lucide/svelte": "^1.21.0",
+		"@protomaps/basemaps": "^5.7.2",
 		"@tailwindcss/typography": "^0.5.19",
+		"bits-ui": "^2.18.1",
 		"maplibre-gl": "^5.24.0"
 	}
 }

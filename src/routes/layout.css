@@ -1,2 +1,78 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+@font-face {
+	font-family: 'Bolder';
+	src:
+		url('/fonts/Bolder-Light.woff2') format('woff2'),
+		url('/fonts/Bolder-Light.woff') format('woff');
+	font-display: swap;
+	font-style: normal;
+	font-weight: 300;
+}
+
+@font-face {
+	font-family: 'Bolder';
+	src:
+		url('/fonts/Bolder-Regular.woff2') format('woff2'),
+		url('/fonts/Bolder-Regular.woff') format('woff');
+	font-display: swap;
+	font-style: normal;
+	font-weight: 400;
+}
+
+@font-face {
+	font-family: 'Bolder';
+	src:
+		url('/fonts/Bolder-RegularItalic.woff2') format('woff2'),
+		url('/fonts/Bolder-RegularItalic.woff') format('woff');
+	font-display: swap;
+	font-style: italic;
+	font-weight: 400;
+}
+
+@font-face {
+	font-family: 'Bolder';
+	src:
+		url('/fonts/Bolder-Bold.woff2') format('woff2'),
+		url('/fonts/Bolder-Bold.woff') format('woff');
+	font-display: swap;
+	font-style: normal;
+	font-weight: 700;
+}
+
+@font-face {
+	font-family: 'Bolder Heading';
+	src:
+		url('/fonts/Bolder-Heading.woff2') format('woff2'),
+		url('/fonts/Bolder-Heading.woff') format('woff');
+	font-display: swap;
+	font-style: normal;
+	font-weight: 700;
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	src: url('/fonts/NotoSans-VariableFont_wdth,wght.ttf') format('truetype');
+	font-display: swap;
+	font-stretch: 62.5% 100%;
+	font-style: normal;
+	font-weight: 100 900;
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	src: url('/fonts/NotoSans-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+	font-display: swap;
+	font-stretch: 62.5% 100%;
+	font-style: italic;
+	font-weight: 100 900;
+}
+
+@theme {
+	--font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-noto: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-bolder: 'Bolder', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-heading: 'Bolder Heading', 'Bolder', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Bolder Heading', 'Bolder', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+}

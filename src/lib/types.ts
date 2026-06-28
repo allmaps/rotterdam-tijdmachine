@@ -10,3 +10,21 @@ export type MapMetadata = {
 	};
 	annotation: string;
 };
+
+export type MapLocation = {
+	center: [number, number];
+	zoom: number;
+	bearing: number;
+};
+
+export type MapKeyboardCommand = {
+	id: number;
+	offset?: [number, number];
+	zoomDelta?: number;
+	bearingDelta?: number;
+};
+
+export type MapToolbarCommand = {
+	id: number;
+	action: 'toggle-in-view' | 'toggle-rotation' | 'toggle-focus';
+};

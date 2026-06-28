@@ -1,58 +1,34 @@
 <script lang="ts">
 	import { MapCollection } from '$lib/models/MapCollection';
-	import { viewState, favorites, toggleFavorite, zoomTo, comparison, loadedAnnotations } from '$lib/store.svelte';
+	import { favorites, toggleFavorite, loadedAnnotations } from '$lib/store.svelte';
 
 	let {
-		onSelect = null,
-		opacity = null,
-		onOpacityChange = null,
-		onOverOpen = null,
-		onShareOpen = null
+		annotation = $bindable()
 	}: {
-		onSelect?: ((annotation: string) => void) | null;
-		opacity?: number | null;
-		onOpacityChange?: ((value: number) => void) | null;
-		onOverOpen?: (() => void) | null;
-		onShareOpen?: (() => void) | null;
+		annotation?: string;
 	} = $props();
 
 	const collection = new MapCollection();
 	const maps = collection.getAllMaps();
 
-	let activeAnnotation = $state(maps[0]?.metadata.annotation);
-
 	$effect(() => {
-		if (!onSelect) {
-			viewState.annotation = maps[0]?.metadata.annotation;
+		if (!annotation && maps[0]) {
+			annotation = maps[0].metadata.annotation;
 		}
 	});
 
 	function select(map: (typeof maps)[0]) {
-		activeAnnotation = map.metadata.annotation;
-
-		if (onSelect) {
-			onSelect(map.metadata.annotation);
-		} else {
-			viewState.annotation = map.metadata.annotation;
-		}
+		annotation = map.metadata.annotation;
 	}
 
-	function handleOpacity(e: Event) {
-		const value = Number((e.target as HTMLInputElement).value);
-		if (onOpacityChange) {
-			onOpacityChange(value);
-		} else {
-			viewState.opacity = value;
-		}
-	}
-
-	let currentOpacity = $derived(onSelect ? (opacity ?? 100) : viewState.opacity);
+	let activeAnnotation = $derived(annotation ?? maps[0]?.metadata.annotation);
 	let toonAlleen = $state(false);
 	let periodeFilter = $state('alle');
 
 	let zichtbareKaarten = $derived(
 		maps.filter((m) => {
-			const beschikbaar = loadedAnnotations.size === 0 || loadedAnnotations.has(m.metadata.annotation);
+			const beschikbaar =
+				loadedAnnotations.size === 0 || loadedAnnotations.has(m.metadata.annotation);
 			if (!beschikbaar) return false;
 			const favorietOk = toonAlleen ? favorites.includes(m.metadata.annotation) : true;
 			const periodeOk =
@@ -72,31 +48,7 @@
 	);
 </script>
 
-<aside
-	class="bg-gray-44 h-full w-70 flex-none overflow-y-auto p-4"
-	style="font-family: 'Barlow Condensed', sans-serif;"
->
-	<div class="mb-4 flex flex-col gap-2 md:hidden">
-		<button
-			onclick={() => (comparison.active = !comparison.active)}
-			class="rounded bg-gray-800 px-3 py-2 text-sm font-semibold text-white"
-		>
-			{comparison.active ? 'Sluiten' : 'Vergelijken'}
-		</button>
-		<div class="flex gap-2">
-			{#if onOverOpen}
-				<button onclick={onOverOpen} class="flex-1 rounded bg-gray-200 py-1 text-sm text-gray-700"
-					>Over</button
-				>
-			{/if}
-			{#if onShareOpen}
-				<button onclick={onShareOpen} class="flex-1 rounded bg-gray-200 py-1 text-sm text-gray-700"
-					>Delen</button
-				>
-			{/if}
-		</div>
-	</div>
-
+<aside class="h-full w-72 flex-none overflow-y-auto bg-gray-50 p-4">
 	<h2 class="mb-3 text-sm font-bold tracking-widest text-gray-500 uppercase">Kaartcollectie</h2>
 
 	<div class="mb-3 flex gap-2">
@@ -130,92 +82,8 @@
 		<option value="na1940">Na 1940</option>
 	</select>
 
-	<div class="mt-6 border-t border-gray-200 pt-4">
-		<p class="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">Transparantie</p>
-		<input
-			value={currentOpacity}
-			oninput={handleOpacity}
-			type="range"
-			min="0"
-			max="100"
-			class="w-full accent-green-700"
-		/>
-		<div class="mt-1 flex justify-between text-xs text-gray-400">
-			<span>0%</span>
-			<span class="font-bold text-gray-700">{currentOpacity}%</span>
-			<span>100%</span>
-		</div>
-	</div>
-
-	<div class="mt-6 border-t border-gray-200 pt-4">
-		<p class="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">Kaartinfo</p>
-		{#each maps as map}
-			{#if map.metadata.annotation === activeAnnotation}
-				<dl class="flex flex-col gap-1 text-xs text-gray-700">
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Jaar</dt>
-						<dd class="font-semibold">{map.metadata.year}</dd>
-					</div>
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Bron</dt>
-						<dd class="text-right font-semibold">{map.metadata.institution}</dd>
-					</div>
-					<div class="flex justify-between border-b border-gray-100 py-1">
-						<dt class="text-gray-500">Formaat</dt>
-						<dd class="font-semibold">{map.metadata.iiif ? 'IIIF / GeoRef' : 'GeoRef'}</dd>
-					</div>
-				</dl>
-
-				<a
-					href={map.metadata.iiif?.type === 'image'
-						? map.metadata.iiif.url.replace('/info.json', '') + '/full/full/0/default.jpg'
-						: map.metadata.url}
-					target="_blank"
-					download
-					class="mt-2 flex w-full items-center justify-center gap-2 rounded border border-green-700 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5 5 5-5M12 15V3"
-						/>
-					</svg>
-					Download kaart
-				</a>
-				<button
-					onclick={() => (zoomTo.annotation = activeAnnotation ?? null)}
-					class="mt-2 flex w-full items-center justify-center gap-2 rounded bg-green-700 px-3 py-2 text-xs font-semibold text-white hover:bg-green-800"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-						/>
-					</svg>
-					Zoom naar kaart
-				</button>
-			{/if}
-		{/each}
-	</div>
-
 	<ul class="mt-6 flex flex-col divide-y divide-gray-200">
-		{#each zichtbareKaarten as map}
+		{#each zichtbareKaarten as map (map.metadata.annotation)}
 			<li class="flex items-center">
 				<button
 					onclick={() => select(map)}

@@ -5,8 +5,15 @@
 	import { LocateFixed, MapPin, Search as SearchIcon, X } from '@lucide/svelte';
 	import { tick } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import type { GeocoderBounds } from '$lib/types';
 
 	const search = new SearchService();
+
+	let {
+		bounds
+	}: {
+		bounds?: GeocoderBounds;
+	} = $props();
 
 	let open = $state(false);
 	let selectedIndex = $state(0);
@@ -14,6 +21,15 @@
 	let locationError = $state('');
 	let inputElement: HTMLInputElement | undefined = $state();
 	let listElement: HTMLUListElement | undefined = $state();
+	let showSearchResults = $derived(
+		search.searchTerm.trim() !== '' &&
+			(search.loading || search.hasSearched || !!search.error || search.results.length > 0)
+	);
+	let canSubmitSearch = $derived(search.searchTerm.trim().length >= 3 && !!search.bounds);
+
+	$effect(() => {
+		search.bounds = bounds;
+	});
 
 	$effect(() => {
 		if (open) {
@@ -37,6 +53,13 @@
 	}
 
 	function handleInput() {
+		selectedIndex = 0;
+		locationError = '';
+		search.reset();
+	}
+
+	function handleSearchSubmit(event: SubmitEvent) {
+		event.preventDefault();
 		selectedIndex = 0;
 		locationError = '';
 		search.searchWithDelay();
@@ -129,8 +152,19 @@
 
 {#if open}
 	<Modal onClose={closeSearch} ariaLabel="Zoek locatie" onKeydown={handleKeydown}>
-		<div class="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
-			<SearchIcon class="h-5 w-5 flex-none text-green-700" />
+		<form
+			class="flex items-center gap-3 border-b border-gray-200 px-4 py-3"
+			onsubmit={handleSearchSubmit}
+		>
+			<button
+				type="submit"
+				aria-label="Zoek"
+				title="Zoek"
+				disabled={!canSubmitSearch || search.loading}
+				class="cursor-pointer rounded p-1 text-green-700 hover:bg-green-50 disabled:cursor-default disabled:opacity-45"
+			>
+				<SearchIcon class="h-5 w-5 flex-none" />
+			</button>
 			<input
 				bind:this={inputElement}
 				bind:value={search.searchTerm}
@@ -160,7 +194,7 @@
 			>
 				<X class="h-5 w-5" />
 			</button>
-		</div>
+		</form>
 
 		{#if locationError}
 			<p class="border-b border-gray-100 px-4 py-2 text-sm font-medium text-red-700" role="alert">
@@ -168,7 +202,7 @@
 			</p>
 		{/if}
 
-		{#if search.searchTerm.trim() !== ''}
+		{#if showSearchResults}
 			<ul
 				bind:this={listElement}
 				transition:slide={{ duration: 140 }}
@@ -206,6 +240,23 @@
 				{/if}
 			</ul>
 		{/if}
+
+		<p class="border-t border-gray-100 px-4 py-2 text-xs font-light text-gray-500">
+			Zoeken via
+			<a
+				href="https://nominatim.openstreetmap.org/"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-green-700">Nominatim</a
+			>
+			· ©
+			<a
+				href="https://www.openstreetmap.org/copyright"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-green-700">OpenStreetMap-bijdragers</a
+			>
+		</p>
 	</Modal>
 {/if}
 

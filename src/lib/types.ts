@@ -17,6 +17,13 @@ export type MapLocation = {
 	bearing: number;
 };
 
+export type GeocoderBounds = {
+	west: number;
+	south: number;
+	east: number;
+	north: number;
+};
+
 export type MapKeyboardCommand = {
 	id: number;
 	offset?: [number, number];

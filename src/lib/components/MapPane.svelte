@@ -2,7 +2,12 @@
 	import Map from '$lib/components/Map.svelte';
 	import MapLayers from '$lib/components/MapLayers.svelte';
 	import Slider from '$lib/components/Slider.svelte';
-	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
+	import type {
+		GeocoderBounds,
+		MapKeyboardCommand,
+		MapLocation,
+		MapToolbarCommand
+	} from '$lib/types';
 
 	let {
 		annotation = $bindable(''),
@@ -14,6 +19,7 @@
 			zoom: 12,
 			bearing: 0
 		}),
+		geocoderBounds = $bindable(),
 		navPosition = 'left',
 		mapToolbarCommand,
 		paneSide = 'left',
@@ -31,6 +37,7 @@
 		selectedYear: number;
 		mapKeyboardCommand?: MapKeyboardCommand;
 		currentLocation?: MapLocation;
+		geocoderBounds?: GeocoderBounds;
 		navPosition?: 'left' | 'right';
 		mapToolbarCommand?: MapToolbarCommand;
 		paneSide?: 'left' | 'right';
@@ -79,6 +86,7 @@
 			bind:inViewOnly={sliderInViewOnly}
 			bind:currentLocation
 			bind:annotationsInView
+			bind:geocoderBounds
 			{mapKeyboardCommand}
 			{mapToolbarCommand}
 			{syncUrl}

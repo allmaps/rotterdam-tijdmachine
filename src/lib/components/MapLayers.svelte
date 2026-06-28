@@ -618,7 +618,7 @@
 				<p class="break-words">
 					Achtergrondkaart:
 					<a
-						class="hover:text-gray-800"
+						class="hover:text-green-700"
 						href="https://github.com/protomaps/basemaps"
 						target="_blank"
 						rel="external noreferrer"
@@ -627,7 +627,7 @@
 					</a>
 					<span aria-hidden="true"> | </span>
 					<a
-						class="hover:text-gray-800"
+						class="hover:text-green-700"
 						href="https://www.openstreetmap.org/copyright"
 						target="_blank"
 						rel="external noreferrer"

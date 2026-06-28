@@ -2,11 +2,14 @@
 	import { comparison } from '$lib/store.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import { Columns2, Info, Share2 } from '@lucide/svelte';
+	import type { GeocoderBounds } from '$lib/types';
 
 	let {
+		searchBounds,
 		onOverOpen,
 		onShareOpen
 	}: {
+		searchBounds?: GeocoderBounds;
 		onOverOpen: () => void;
 		onShareOpen: () => void;
 	} = $props();
@@ -22,7 +25,7 @@
 		class="flex flex-none items-center justify-between gap-2 border-b border-green-900/20 bg-green-700 p-2 text-white md:px-8"
 	>
 		<div class="flex min-w-0 flex-1 items-center gap-2">
-			<Search />
+			<Search bounds={searchBounds} />
 
 			<button
 				onclick={toggleCompare}

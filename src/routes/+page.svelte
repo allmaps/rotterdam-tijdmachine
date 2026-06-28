@@ -6,7 +6,12 @@
 	import { onMount } from 'svelte';
 	import data from '$lib/content/data';
 	import { comparison, mapView, viewState } from '$lib/store.svelte';
-	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
+	import type {
+		GeocoderBounds,
+		MapKeyboardCommand,
+		MapLocation,
+		MapToolbarCommand
+	} from '$lib/types';
 
 	const DEFAULT_YEAR = 1897;
 	const KEYBOARD_PAN_PIXELS = 100;
@@ -21,6 +26,7 @@
 	let overOpen = $state(false);
 	let shareOpen = $state(false);
 	let currentLocation = $state<MapLocation>(defaultLocation);
+	let geocoderBounds = $state<GeocoderBounds>();
 	let compareStacked = $state(false);
 	let panesReady = $state(false);
 	let mapKeyboardCommand = $state<MapKeyboardCommand>();
@@ -268,7 +274,11 @@
 />
 
 <div class="flex h-[100dvh] flex-col">
-	<Header onOverOpen={() => (overOpen = true)} onShareOpen={() => (shareOpen = true)} />
+	<Header
+		searchBounds={geocoderBounds}
+		onOverOpen={() => (overOpen = true)}
+		onShareOpen={() => (shareOpen = true)}
+	/>
 
 	<div
 		class="flex flex-1 {comparison.active
@@ -285,6 +295,7 @@
 				bind:opacity={viewState.opacity}
 				bind:selectedYear
 				bind:currentLocation
+				bind:geocoderBounds
 				{mapKeyboardCommand}
 				{mapToolbarCommand}
 				syncUrl

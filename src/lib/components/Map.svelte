@@ -14,7 +14,12 @@
 		mapIdsByAnnotation
 	} from '$lib/shared/warped-map-list';
 	import MapControls from '$lib/components/MapControls.svelte';
-	import type { MapKeyboardCommand, MapLocation, MapToolbarCommand } from '$lib/types';
+	import type {
+		GeocoderBounds,
+		MapKeyboardCommand,
+		MapLocation,
+		MapToolbarCommand
+	} from '$lib/types';
 
 	let {
 		annotation = $bindable(viewState.annotation),
@@ -28,6 +33,7 @@
 			bearing: mapView.bearing
 		}),
 		annotationsInView = $bindable<string[]>([]),
+		geocoderBounds = $bindable(),
 		mapKeyboardCommand,
 		mapToolbarCommand,
 		syncUrl = false,
@@ -42,6 +48,7 @@
 		inViewOnly?: boolean;
 		currentLocation?: MapLocation;
 		annotationsInView?: string[];
+		geocoderBounds?: GeocoderBounds;
 		mapKeyboardCommand?: MapKeyboardCommand;
 		mapToolbarCommand?: MapToolbarCommand;
 		syncUrl?: boolean;
@@ -462,6 +469,24 @@
 		annotationsInView = nextAnnotationsInView;
 	}
 
+	function updateGeocoderBounds() {
+		const boundsLike = warpedMapLayer.getBounds();
+		if (!boundsLike) {
+			geocoderBounds = undefined;
+			return;
+		}
+
+		const bounds = maplibregl.LngLatBounds.convert(boundsLike);
+		const nextBounds = {
+			west: bounds.getWest(),
+			south: bounds.getSouth(),
+			east: bounds.getEast(),
+			north: bounds.getNorth()
+		};
+
+		geocoderBounds = Object.values(nextBounds).every(Number.isFinite) ? nextBounds : undefined;
+	}
+
 	onMount(() => {
 		const mapInstance = new maplibregl.Map({
 			style: basemapStyle,
@@ -503,6 +528,7 @@
 			mapInstance.addLayer(warpedMapLayer);
 			loaded = true;
 			updateAnnotationsInView();
+			updateGeocoderBounds();
 		});
 
 		mapInstance.on('styleimagemissing', async (event) => {
@@ -529,6 +555,7 @@
 			}
 			mapInstance.remove();
 			annotationsInView = [];
+			geocoderBounds = undefined;
 			map = undefined;
 			mapReady = false;
 		};

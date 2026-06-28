@@ -17,7 +17,9 @@ export type AppConfig = {
 		url: string;
 		description: string;
 		locale: string;
-		themeColor: string;
+	};
+	theme: {
+		color: string;
 	};
 	map: {
 		defaultYear: number;

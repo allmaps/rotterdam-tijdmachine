@@ -3,7 +3,9 @@ site:
   url: https://pages.allmaps.org/rotterdam-tijdmachine/
   description: Verken historische kaarten van Rotterdam door de tijd en vergelijk kaartlagen met de huidige stad.
   locale: nl
-  themeColor: "#15803d"
+
+theme:
+  color: green
 
 map:
   defaultYear: 1897

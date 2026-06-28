@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import maplibregl from 'maplibre-gl';
 	import { WarpedMapLayer } from '@allmaps/maplibre';
 	import { AlertTriangle, Focus } from '@lucide/svelte';
@@ -84,7 +84,9 @@
 	let warpedMapList = getWarpedMapList();
 	let warpedMapLayer = new WarpedMapLayer({ visible: false, warpedMapList });
 
-	const basemapLayers = getProtomapsLayers('light', undefined, { lang: config.site.locale });
+	const basemapLayers = untrack(() =>
+		getProtomapsLayers('light', undefined, { lang: config.site.locale })
+	);
 	const loadedStyleImages = new Set<string>();
 	let canZoomToActiveMap = $derived(
 		loaded && !!actieveAnnotation && (mapIdsByAnnotation.get(actieveAnnotation)?.size ?? 0) > 0
@@ -624,7 +626,7 @@
 			<div class="mt-4 flex justify-end gap-2">
 				<button
 					type="button"
-					class="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+					class="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
 					onclick={dismissVisibilityWarning}
 				>
 					{config.mapWarnings.dismiss}
@@ -632,7 +634,7 @@
 				<button
 					bind:this={visibilityWarningPrimaryButton}
 					type="button"
-					class="inline-flex items-center gap-2 rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+					class="inline-flex items-center gap-2 rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
 					onclick={zoomToActiveMapFromWarning}
 				>
 					<Focus class="h-4 w-4" />

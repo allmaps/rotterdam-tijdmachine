@@ -64,7 +64,8 @@ The YAML files are imported in `src/routes/+page.ts` and `src/routes/+layout.ts`
 
 Important sections:
 
-- `site`: name, URL, description, locale, and theme color for metadata
+- `site`: name, URL, description, and locale for metadata
+- `theme.color`: Tailwind palette name used for the primary UI color and browser theme color
 - `map.defaultYear`: the year the app opens with by default
 - `map.initialView`: default map view with `center`, `zoom`, and `bearing`
 - `map.keyboard`: step sizes for keyboard navigation
@@ -77,9 +78,10 @@ For a new use case, usually start with:
 1. Update `site.name`, `site.url`, and `site.description`.
 2. Set `map.defaultYear` to a year that exists in your collection.
 3. Set `map.initialView.center` to `[longitude, latitude]` for your area.
-4. Request your own free Protomaps API key at [protomaps.com/api](https://protomaps.com/api) and set it as `basemap.protomapsApiKey`.
-5. Rewrite or translate the text under `about`, `search`, `layers`, and `controls`.
-6. Check `search.countryCodes` if the app is used outside the Netherlands.
+4. Set `theme.color` to a Tailwind palette name, such as `green`, `blue`, `emerald`, or `rose`; do not include a shade suffix.
+5. Request your own free Protomaps API key at [protomaps.com/api](https://protomaps.com/api) and set it as `basemap.protomapsApiKey`.
+6. Rewrite or translate the text under `about`, `search`, `layers`, and `controls`.
+7. Check `search.countryCodes` if the app is used outside the Netherlands.
 
 ### `collection.yml`
 

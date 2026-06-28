@@ -43,9 +43,7 @@
 	} = $props();
 
 	let maps = $derived(mapMetadata);
-	let availableYears = $derived(
-		[...new Set(maps.map((map) => map.year))].sort((a, b) => a - b)
-	);
+	let availableYears = $derived([...new Set(maps.map((map) => map.year))].sort((a, b) => a - b));
 
 	let layersOpen = $state(false);
 	let showCollection = $state(false);
@@ -135,9 +133,7 @@
 	}
 
 	function getSearchText(map: (typeof maps)[0]) {
-		return normalizeSearchTerm(
-			[map.label, map.title, map.year, map.institution].join(' ')
-		);
+		return normalizeSearchTerm([map.label, map.title, map.year, map.institution].join(' '));
 	}
 
 	function openLayers() {
@@ -358,7 +354,7 @@
 						href={activeMap.url}
 						target="_blank"
 						rel="external noopener noreferrer"
-						class="inline-flex max-w-full items-center gap-1 text-xs font-medium text-gray-500 hover:text-green-700"
+						class="inline-flex max-w-full items-center gap-1 text-xs font-medium text-gray-500 hover:text-brand-700"
 						aria-label="{config.layers.viewItemAt} {activeMap.institution}"
 					>
 						<span class="min-w-0 truncate">{activeMap.institution}</span>
@@ -370,14 +366,16 @@
 			{#if hasMultipleMaps}
 				<button
 					type="button"
-					aria-label="{config.layers.previousMap} ({activeMapPosition} van {mapsForResolvedYear.length})"
+					aria-label="{config.layers
+						.previousMap} ({activeMapPosition} van {mapsForResolvedYear.length})"
 					onclick={() => selectRelativeMap(-1)}
 					class="flex h-10 w-8 flex-none items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900"
 				>
 					<ChevronLeft class="h-4 w-4" />
 				</button>
 				<span
-					aria-label="{config.layers.mapPosition} {activeMapPosition} van {mapsForResolvedYear.length}"
+					aria-label="{config.layers
+						.mapPosition} {activeMapPosition} van {mapsForResolvedYear.length}"
 					title="{config.layers.mapPosition} {activeMapPosition} van {mapsForResolvedYear.length}"
 					class="flex h-10 min-w-10 flex-none items-center justify-center rounded bg-gray-50 px-2 font-heading text-xs font-bold text-gray-700 tabular-nums"
 				>
@@ -385,7 +383,8 @@
 				</span>
 				<button
 					type="button"
-					aria-label="{config.layers.nextMap} ({activeMapPosition} van {mapsForResolvedYear.length})"
+					aria-label="{config.layers
+						.nextMap} ({activeMapPosition} van {mapsForResolvedYear.length})"
 					onclick={() => selectRelativeMap(1)}
 					class="flex h-10 w-8 flex-none items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900"
 				>
@@ -414,7 +413,7 @@
 			onKeydown={handleKeydown}
 		>
 			<div class="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
-				<Layers class="h-5 w-5 flex-none text-green-700" />
+				<Layers class="h-5 w-5 flex-none text-brand-700" />
 				<div class="min-w-0 flex-1">
 					<h2 id={modalTitleId} class="text-lg leading-6 font-semibold">
 						{config.layers.title}
@@ -453,7 +452,7 @@
 			</div>
 
 			<div class="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
-				<SearchIcon class="h-5 w-5 flex-none text-green-700" />
+				<SearchIcon class="h-5 w-5 flex-none text-brand-700" />
 				<input
 					bind:this={searchInputElement}
 					bind:value={searchTerm}
@@ -510,11 +509,11 @@
 						aria-pressed={showInViewOnly}
 						onclick={toggleInViewFilter}
 						class="flex min-w-0 items-center justify-center gap-1 rounded border px-1 py-2 transition {showInViewOnly
-							? 'border-green-700 bg-green-50 text-gray-900'
+							? 'border-brand-700 bg-brand-50 text-gray-900'
 							: 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'}"
 					>
 						<MapPinned
-							class="h-4 w-4 flex-none {showInViewOnly ? 'text-green-700' : 'text-gray-400'}"
+							class="h-4 w-4 flex-none {showInViewOnly ? 'text-brand-700' : 'text-gray-400'}"
 						/>
 						<span class="min-w-0 truncate">{config.layers.inView}</span>
 					</button>
@@ -540,13 +539,14 @@
 						>
 							<div
 								class="flex min-w-0 items-stretch transition {index === selectedIndex
-									? 'bg-green-50'
+									? 'bg-brand-50'
 									: 'hover:bg-gray-50'}"
 							>
 								<div class="min-w-0 flex-1">
 									<button
 										type="button"
-										aria-label="{config.layers.selectMap} {map.label} ({map.year}, {map.institution})"
+										aria-label="{config.layers
+											.selectMap} {map.label} ({map.year}, {map.institution})"
 										onclick={() => selectMap(map)}
 										onmouseenter={() => (selectedIndex = index)}
 										class="w-full min-w-0 px-4 pt-3 pb-1 text-left"
@@ -565,7 +565,7 @@
 											{#if annotation === map.annotation}
 												<span
 													title={config.layers.visibleOnMap}
-													class="flex h-5 w-5 flex-none items-center justify-center rounded bg-green-100 text-green-700"
+													class="flex h-5 w-5 flex-none items-center justify-center rounded bg-brand-100 text-brand-700"
 												>
 													<span class="sr-only">{config.layers.visibleOnMap}</span>
 													<Eye class="h-3.5 w-3.5" />
@@ -580,7 +580,7 @@
 											rel="external noopener noreferrer"
 											aria-label="{config.layers.viewItemAt} {map.institution}"
 											onmouseenter={() => (selectedIndex = index)}
-											class="inline-flex max-w-full items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 hover:bg-green-50 hover:text-green-700"
+											class="inline-flex max-w-full items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 hover:bg-brand-50 hover:text-brand-700"
 										>
 											<span class="min-w-0 break-words">{map.institution}</span>
 											<ExternalLink class="h-3 w-3 flex-none" />
@@ -621,7 +621,7 @@
 				<p class="break-words">
 					{config.layers.basemap}:
 					<a
-						class="hover:text-green-700"
+						class="hover:text-brand-700"
 						href="https://github.com/protomaps/basemaps"
 						target="_blank"
 						rel="external noreferrer"
@@ -630,7 +630,7 @@
 					</a>
 					<span aria-hidden="true"> | </span>
 					<a
-						class="hover:text-green-700"
+						class="hover:text-brand-700"
 						href="https://www.openstreetmap.org/copyright"
 						target="_blank"
 						rel="external noreferrer"

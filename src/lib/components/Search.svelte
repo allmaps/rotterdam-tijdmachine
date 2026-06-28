@@ -18,7 +18,7 @@
 	$effect(() => {
 		if (open) {
 			tick().then(() => {
-				inputElement?.focus();
+				inputElement?.focus({ preventScroll: true });
 			});
 		} else {
 			search.searchTerm = '';
@@ -172,7 +172,7 @@
 			<ul
 				bind:this={listElement}
 				transition:slide={{ duration: 140 }}
-				class="max-h-[56vh] overflow-y-auto bg-white"
+				class="max-h-[56dvh] overflow-y-auto overscroll-contain bg-white"
 			>
 				{#if search.results.length > 0}
 					{#each search.results as result, index (`${result.place_id}-${result.lon}-${result.lat}`)}

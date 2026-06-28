@@ -98,7 +98,7 @@
 	$effect(() => {
 		if (layersOpen) {
 			tick().then(() => {
-				searchInputElement?.focus();
+				focusSearchInput();
 				selectActiveResult();
 			});
 		}
@@ -159,6 +159,18 @@
 		);
 	}
 
+	function shouldAutoFocusSearch() {
+		if (typeof window === 'undefined') return false;
+
+		return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+	}
+
+	function focusSearchInput() {
+		if (shouldAutoFocusSearch()) {
+			searchInputElement?.focus({ preventScroll: true });
+		}
+	}
+
 	function handleGlobalKeydown(event: KeyboardEvent) {
 		if (!enableKeyboardShortcut || event.repeat) return;
 
@@ -207,13 +219,13 @@
 
 	async function showCollectionView() {
 		showCollection = true;
-		searchInputElement?.focus();
+		focusSearchInput();
 		await selectActiveResult();
 	}
 
 	async function showCurrentYearView() {
 		showCollection = false;
-		searchInputElement?.focus();
+		focusSearchInput();
 		await selectActiveResult();
 	}
 
@@ -236,13 +248,13 @@
 	function toggleFavoritesFilter() {
 		showFavoritesOnly = !showFavoritesOnly;
 		selectedIndex = 0;
-		searchInputElement?.focus();
+		focusSearchInput();
 	}
 
 	function toggleInViewFilter() {
 		showInViewOnly = !showInViewOnly;
 		selectedIndex = 0;
-		searchInputElement?.focus();
+		focusSearchInput();
 	}
 
 	function scrollSelectedIntoView(block: ScrollLogicalPosition = 'nearest') {
@@ -515,7 +527,7 @@
 				<ul
 					bind:this={listElement}
 					transition:slide={{ duration: 140 }}
-					class="min-h-0 flex-1 overflow-y-auto bg-white"
+					class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white"
 				>
 					{#each visibleMaps as map, index (map.metadata.annotation)}
 						<li

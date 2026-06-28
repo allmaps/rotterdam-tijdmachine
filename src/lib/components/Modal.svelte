@@ -65,7 +65,7 @@
 
 <div
 	bind:this={dialogElement}
-	class="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-black/45 px-3 pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pt-24"
+	class="fixed inset-0 z-[1000] flex items-start justify-center overflow-hidden overscroll-none bg-black/45 px-3 pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pt-24"
 	role="dialog"
 	aria-modal="true"
 	aria-label={ariaLabel}
@@ -83,7 +83,7 @@
 	></button>
 
 	<div
-		class="relative z-10 flex w-full max-w-xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900 shadow-2xl {panelClass}"
+		class="relative z-10 flex w-full max-w-xl touch-auto flex-col overflow-hidden overscroll-contain rounded-lg border border-gray-200 bg-white text-gray-900 shadow-2xl {panelClass}"
 		transition:fly={{ y: -16, duration: 180 }}
 	>
 		{@render children()}

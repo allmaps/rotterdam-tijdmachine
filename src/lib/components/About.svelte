@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
-	import { X } from '@lucide/svelte';
+	import { X, Info } from '@lucide/svelte';
 	import { tick } from 'svelte';
 
 	let { onClose }: { onClose: () => void } = $props();
@@ -20,8 +20,9 @@
 
 <Modal {onClose} ariaLabelledby="about-title" panelClass="max-h-[calc(100vh-7rem)]">
 	<div class="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
+		<Info class="h-5 w-5 flex-none text-green-700" />
 		<h2 id="about-title" class="text-xl leading-none font-bold md:text-2xl">
-			Over Roffa reis door de tijd
+			Over Rotterdam Tijdmachine
 		</h2>
 		<button
 			bind:this={closeButton}
@@ -36,9 +37,9 @@
 
 	<div class="overflow-y-auto px-5 py-5">
 		<p class="mb-4 leading-relaxed text-gray-700">
-			Roffa reis door de tijd maakt het mogelijk om ruim 150 jaar aan Rotterdamse stadsgeschiedenis
-			te ontdekken. Vanaf de negentiende eeuw is er veel veranderd in de manier waarop Rotterdam
-			zich heeft ontwikkeld als stad en haven.
+			Rotterdam Tijdmachine maakt het mogelijk om ruim 150 jaar aan Rotterdamse stadsgeschiedenis te
+			ontdekken. Vanaf de negentiende eeuw is er veel veranderd in de manier waarop Rotterdam zich
+			heeft ontwikkeld als stad en haven.
 		</p>
 		<p class="mb-4 leading-relaxed text-gray-700">
 			De historische kaarten laten zien hoe Rotterdam groeide van een kleine handelsstad tot een van

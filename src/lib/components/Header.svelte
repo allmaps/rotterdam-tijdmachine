@@ -28,7 +28,7 @@
 				onclick={toggleCompare}
 				aria-label="Vergelijkmodus"
 				aria-pressed={comparison.active}
-				class="flex h-8 items-center gap-2 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3 {comparison.active
+				class="flex h-8 cursor-pointer items-center gap-2 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3 {comparison.active
 					? 'bg-green-800'
 					: ''}"
 			>
@@ -47,7 +47,7 @@
 			<button
 				onclick={onOverOpen}
 				aria-label="Over"
-				class="flex h-8 items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
+				class="flex h-8 cursor-pointer items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
 			>
 				<Info class="h-4 w-4" />
 				<span class="hidden sm:inline">Over</span>
@@ -55,7 +55,7 @@
 			<button
 				onclick={onShareOpen}
 				aria-label="Delen"
-				class="flex h-8 items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
+				class="flex h-8 cursor-pointer items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
 			>
 				<Share2 class="h-4 w-4" />
 				<span class="hidden sm:inline">Delen</span>

@@ -121,7 +121,7 @@
 	type="button"
 	onclick={showSearch}
 	aria-label="Zoek locatie"
-	class="flex h-8 items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
+	class="flex h-8 cursor-pointer items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-green-800 md:px-3"
 >
 	<SearchIcon class="h-4 w-4" />
 	<span class="hidden sm:inline">Zoeken</span>
@@ -147,7 +147,7 @@
 				aria-label={locating ? 'Locatie bepalen...' : 'Gebruik mijn locatie'}
 				title={locating ? 'Locatie bepalen...' : 'Gebruik mijn locatie'}
 				disabled={locating}
-				class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-green-700 disabled:cursor-wait disabled:opacity-70"
+				class="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-green-700 disabled:cursor-wait disabled:opacity-70"
 				onclick={useUserLocation}
 			>
 				<LocateFixed class="h-5 w-5 {locating ? 'animate-pulse text-green-700' : ''}" />
@@ -155,7 +155,7 @@
 			<button
 				type="button"
 				aria-label="Sluit zoeken"
-				class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+				class="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
 				onclick={closeSearch}
 			>
 				<X class="h-5 w-5" />

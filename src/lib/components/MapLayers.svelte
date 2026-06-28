@@ -317,7 +317,7 @@
 
 {#if activeMap}
 	<div
-		class="absolute right-2 bottom-2 left-2 grid grid-flow-col items-center justify-items-center"
+		class="absolute right-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-2 grid grid-flow-col items-center justify-items-center"
 	>
 		<div
 			class="z-30 flex min-h-14 w-full max-w-xl items-center gap-3 overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg"
@@ -396,7 +396,7 @@
 		<Modal
 			onClose={closeLayers}
 			ariaLabelledby={modalTitleId}
-			panelClass="max-h-[calc(100vh-5.5rem)] max-w-2xl md:max-h-[calc(100vh-8rem)]"
+			panelClass="max-h-[calc(100dvh-5.5rem)] max-w-2xl md:max-h-[calc(100dvh-8rem)]"
 			onKeydown={handleKeydown}
 		>
 			<div class="flex items-center gap-3 border-b border-gray-200 px-4 py-3">

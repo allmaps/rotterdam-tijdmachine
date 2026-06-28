@@ -1,24 +1,41 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import Modal from '$lib/components/Modal.svelte';
 	import { Check, Copy, X, Share2 } from '@lucide/svelte';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	let { onClose }: { onClose: () => void } = $props();
 
-	let url = $derived(page.url.href);
+	let url = $state('');
 	let copied = $state(false);
 	let inputElement: HTMLInputElement | undefined = $state();
 	let copiedTimer: ReturnType<typeof setTimeout> | null = null;
 
+	onMount(() => {
+		url = getCurrentUrl();
+	});
+
 	$effect(() => {
 		tick().then(() => {
-			inputElement?.focus();
+			if (!shouldAutoSelectInput()) return;
+
+			inputElement?.focus({ preventScroll: true });
 			inputElement?.select();
 		});
 	});
 
+	function shouldAutoSelectInput() {
+		if (typeof window === 'undefined') return false;
+
+		return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+	}
+
+	function getCurrentUrl() {
+		return typeof window === 'undefined' ? '' : window.location.href;
+	}
+
 	async function copyUrl() {
+		url = getCurrentUrl();
+
 		try {
 			await navigator.clipboard.writeText(url);
 		} catch {
@@ -40,7 +57,7 @@
 			type="button"
 			onclick={onClose}
 			aria-label="Sluit delen"
-			class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+			class="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
 		>
 			<X class="h-5 w-5" />
 		</button>
@@ -54,7 +71,7 @@
 				type="text"
 				readonly
 				value={url}
-				class="m-0 min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-green-700"
+				class="m-0 min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-base text-gray-700 outline-none focus:border-green-700"
 			/>
 			<button
 				type="button"

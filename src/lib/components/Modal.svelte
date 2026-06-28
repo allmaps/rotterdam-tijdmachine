@@ -65,7 +65,7 @@
 
 <div
 	bind:this={dialogElement}
-	class="fixed inset-0 z-[1000] flex items-start justify-center bg-black/45 px-3 pt-14 md:pt-24"
+	class="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-black/45 px-3 pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pt-24"
 	role="dialog"
 	aria-modal="true"
 	aria-label={ariaLabel}
@@ -75,7 +75,7 @@
 >
 	<button
 		type="button"
-		class="absolute inset-0 cursor-default"
+		class="absolute inset-0 cursor-default cursor-pointer"
 		aria-hidden="true"
 		tabindex="-1"
 		onclick={onClose}

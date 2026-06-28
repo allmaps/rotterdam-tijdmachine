@@ -267,7 +267,7 @@
 	onblur={restoreOpacityShortcut}
 />
 
-<div class="flex h-screen flex-col">
+<div class="flex h-[100dvh] flex-col">
 	<Header onOverOpen={() => (overOpen = true)} onShareOpen={() => (shareOpen = true)} />
 
 	<div

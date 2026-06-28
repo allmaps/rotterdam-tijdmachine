@@ -27,7 +27,11 @@
 	const positionClass = $derived(position === 'top-left' ? 'top-2 left-2' : 'top-2 right-2');
 	const opacityPanelClass = $derived(position === 'top-left' ? 'left-0' : 'right-0');
 	const inViewTitle = $derived(
-		inViewOnly ? 'Toon alle jaren' : canFilterInView ? 'Filter op kaarten in beeld' : 'Geen kaarten in beeld'
+		inViewOnly
+			? 'Toon alle jaren'
+			: canFilterInView
+				? 'Filter op kaarten in beeld'
+				: 'Geen kaarten in beeld'
 	);
 	let opacityOpen = $state(false);
 
@@ -88,7 +92,7 @@
 				aria-label={control.label}
 				title={control.label}
 				onclick={control.action}
-				class="flex h-9 w-9 items-center justify-center border-r border-gray-200 last:border-r-0 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+				class="flex h-9 w-9 cursor-pointer items-center justify-center border-r border-gray-200 last:border-r-0 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
 			>
 				<Icon class="h-4 w-4" />
 			</button>
@@ -99,13 +103,11 @@
 			aria-label={rotateToMapOrientation
 				? 'Kaartoriëntatie uitschakelen'
 				: 'Kaartoriëntatie volgen'}
-			title={rotateToMapOrientation
-				? 'Kaartoriëntatie uitschakelen'
-				: 'Kaartoriëntatie volgen'}
+			title={rotateToMapOrientation ? 'Kaartoriëntatie uitschakelen' : 'Kaartoriëntatie volgen'}
 			aria-pressed={rotateToMapOrientation}
 			disabled={!canZoomToMap}
 			onclick={toggleMapOrientation}
-			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {rotateToMapOrientation
+			class="flex h-9 w-9 cursor-pointer items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {rotateToMapOrientation
 				? 'bg-green-700 text-white hover:bg-green-800'
 				: ''}"
 		>
@@ -119,7 +121,7 @@
 			aria-pressed={focusActiveMap}
 			disabled={!canZoomToMap}
 			onclick={toggleMapFocus}
-			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {focusActiveMap
+			class="flex h-9 w-9 cursor-pointer items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {focusActiveMap
 				? 'bg-green-700 text-white hover:bg-green-800'
 				: ''}"
 		>
@@ -133,7 +135,7 @@
 			aria-pressed={inViewOnly}
 			disabled={!inViewOnly && !canFilterInView}
 			onclick={toggleInViewOnly}
-			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {inViewOnly
+			class="flex h-9 w-9 cursor-pointer items-center justify-center border-r border-gray-200 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white {inViewOnly
 				? 'bg-green-700 text-white hover:bg-green-800'
 				: ''}"
 		>
@@ -146,7 +148,7 @@
 			title="Transparantie aanpassen"
 			aria-expanded={opacityOpen}
 			onclick={() => (opacityOpen = !opacityOpen)}
-			class="flex h-9 w-9 items-center justify-center border-r border-gray-200 last:border-r-0 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 {opacityOpen
+			class="flex h-9 w-9 cursor-pointer items-center justify-center border-r border-gray-200 last:border-r-0 hover:bg-gray-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-green-700 {opacityOpen
 				? 'bg-gray-100'
 				: ''}"
 		>

@@ -18,7 +18,7 @@
 	});
 </script>
 
-<Modal {onClose} ariaLabelledby="about-title" panelClass="max-h-[calc(100vh-7rem)]">
+<Modal {onClose} ariaLabelledby="about-title" panelClass="max-h-[calc(100dvh-7rem)]">
 	<div class="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
 		<Info class="h-5 w-5 flex-none text-green-700" />
 		<h2 id="about-title" class="text-xl leading-none font-bold md:text-2xl">
@@ -29,7 +29,7 @@
 			type="button"
 			onclick={onClose}
 			aria-label="Sluit over"
-			class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+			class="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
 		>
 			<X class="h-5 w-5" />
 		</button>

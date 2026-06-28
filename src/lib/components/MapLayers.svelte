@@ -249,7 +249,24 @@
 		if (!listElement) return;
 
 		const selectedElement = listElement.children[selectedIndex] as HTMLElement | undefined;
-		selectedElement?.scrollIntoView({ block, inline: 'nearest' });
+		if (!selectedElement) return;
+
+		const listRect = listElement.getBoundingClientRect();
+		const selectedRect = selectedElement.getBoundingClientRect();
+		const selectedTop = selectedRect.top - listRect.top + listElement.scrollTop;
+		const selectedBottom = selectedTop + selectedRect.height;
+		const viewportTop = listElement.scrollTop;
+		const viewportBottom = viewportTop + listElement.clientHeight;
+
+		if (block === 'center') {
+			listElement.scrollTop = selectedTop - (listElement.clientHeight - selectedRect.height) / 2;
+		} else if (block === 'end') {
+			listElement.scrollTop = selectedBottom - listElement.clientHeight;
+		} else if (block === 'start' || selectedTop < viewportTop) {
+			listElement.scrollTop = selectedTop;
+		} else if (selectedBottom > viewportBottom) {
+			listElement.scrollTop = selectedBottom - listElement.clientHeight;
+		}
 	}
 
 	function handleKeydown(event: KeyboardEvent) {

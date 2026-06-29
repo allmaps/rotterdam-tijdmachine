@@ -171,6 +171,12 @@
 	});
 
 	$effect(() => {
+		if (focusActiveMap) {
+			visibilityWarningOpen = false;
+		}
+	});
+
+	$effect(() => {
 		const shouldRotate = rotateToMapOrientation;
 		const annotationForOrientation = actieveAnnotation;
 		if (!loaded || !mapReady || !map) return;
@@ -410,7 +416,7 @@
 
 		selectedMapVisibility = getSelectedMapVisibility(annotationForCheck);
 
-		if (selectedMapVisibility === 'fully-visible') {
+		if (focusActiveMap || selectedMapVisibility === 'fully-visible') {
 			visibilityWarningOpen = false;
 			return;
 		}

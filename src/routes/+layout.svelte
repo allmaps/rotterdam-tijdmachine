@@ -27,7 +27,7 @@
 	<meta name="description" content={description} />
 	<meta name="application-name" content={siteName} />
 	<meta name="apple-mobile-web-app-title" content={siteName} />
-	<meta name="color-scheme" content="light dark" />
+	<meta name="color-scheme" content="light" />
 	<meta name="theme-color" content={themeMetaColor} />
 	<meta name="robots" content="index, follow" />
 	<meta name="format-detection" content="telephone=no" />

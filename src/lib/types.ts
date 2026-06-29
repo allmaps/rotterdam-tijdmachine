@@ -21,6 +21,30 @@ export type AppConfig = {
 	theme: {
 		color: string;
 		shade?: number | string;
+		fonts?: {
+			families?: Array<{
+				name: string;
+				faces: Array<{
+					weight?: number | string;
+					style?: string;
+					display?: string;
+					stretch?: string;
+					files: Array<
+						| string
+						| {
+								path: string;
+								format?: string;
+						  }
+					>;
+				}>;
+			}>;
+			roles?: {
+				body?: string | string[];
+				accent?: string | string[];
+				heading?: string | string[];
+				display?: string | string[];
+			};
+		};
 	};
 	map: {
 		defaultYear: number;

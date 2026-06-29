@@ -33,11 +33,50 @@ const customThemeRoleMixes = {
 	secondary: { color: white, amount: 0.14 },
 	hover: { color: black, amount: 0.17 }
 } as const;
+const fontRoleVariables = {
+	body: '--font-sans',
+	accent: '--font-bolder',
+	heading: '--font-heading',
+	display: '--font-display'
+} as const;
+const defaultFontRoles: Record<FontRole, string> = {
+	body: 'Noto Sans',
+	accent: 'Noto Sans',
+	heading: 'Noto Sans',
+	display: 'Noto Sans'
+};
+const fallbackFontFamilies = ['Noto Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'];
+const genericFontFamilies = new Set([
+	'serif',
+	'sans-serif',
+	'monospace',
+	'cursive',
+	'fantasy',
+	'system-ui',
+	'ui-serif',
+	'ui-sans-serif',
+	'ui-monospace',
+	'ui-rounded',
+	'emoji',
+	'math',
+	'fangsong'
+]);
+const formatByExtension: Record<string, string> = {
+	woff2: 'woff2',
+	woff: 'woff',
+	ttf: 'truetype',
+	otf: 'opentype'
+};
 
 type ThemeShade = (typeof tailwindShades)[number];
 type ThemePalette = Record<ThemeShade, string>;
 type SupportedMainShade = (typeof supportedMainShades)[number];
 type ThemeRole = keyof typeof themeRoles;
+type FontRole = keyof typeof fontRoleVariables;
+type ThemeFonts = NonNullable<AppConfig['theme']['fonts']>;
+type ThemeFontFamily = NonNullable<ThemeFonts['families']>[number];
+type ThemeFontFace = ThemeFontFamily['faces'][number];
+type ThemeFontFile = ThemeFontFace['files'][number];
 type ParsedTheme =
 	| {
 			type: 'custom';
@@ -88,13 +127,109 @@ function getThemePalette(color: string | undefined) {
 export function getThemeStyle(theme: AppConfig['theme']) {
 	const parsedTheme = parseTheme(theme);
 
-	return Object.entries(
+	const colorDeclarations = Object.entries(
 		parsedTheme.type === 'custom'
 			? getCustomThemeRoles(parsedTheme.color)
 			: getPaletteThemeRoles(parsedTheme.color, parsedTheme.shade)
 	)
-		.map(([role, color]) => `--color-brand-${role}: ${color} !important;`)
-		.join(' ');
+		.map(([role, color]) => `--color-brand-${role}: ${color} !important;`);
+
+	return [...colorDeclarations, ...getFontRoleDeclarations(theme.fonts)].join(' ');
+}
+
+export function getThemeHeadStyle(theme: AppConfig['theme']) {
+	return `${getThemeFontFaceStyle(theme.fonts)}\n:root { ${getThemeStyle(theme)} }`;
+}
+
+function getFontRoleDeclarations(fonts: ThemeFonts | undefined) {
+	const roles = fonts?.roles ?? {};
+
+	return (Object.entries(fontRoleVariables) as Array<[FontRole, string]>).map(
+		([role, variable]) => {
+			const families = normalizeFontFamilies(roles[role] ?? defaultFontRoles[role]);
+			return `${variable}: ${getFontStack(families)} !important;`;
+		}
+	);
+}
+
+function getThemeFontFaceStyle(fonts: ThemeFonts | undefined) {
+	return (fonts?.families ?? [])
+		.flatMap((family) =>
+			(family.faces ?? []).map((face) => getFontFaceRule(family.name, face)).filter(Boolean)
+		)
+		.join('\n\n');
+}
+
+function getFontFaceRule(familyName: string, face: ThemeFontFace) {
+	const sources = (face.files ?? []).map(getFontFileSource).filter(Boolean);
+	if (!familyName || sources.length === 0) return '';
+
+	const declarations = [
+		`font-family: ${quoteCssString(familyName)};`,
+		`src:\n\t\t${sources.join(',\n\t\t')};`,
+		`font-display: ${safeFontDisplay(face.display)};`,
+		`font-style: ${safeCssValue(face.style, 'normal')};`,
+		`font-weight: ${safeCssValue(face.weight, '400')};`
+	];
+
+	if (face.stretch) {
+		declarations.push(`font-stretch: ${safeCssValue(face.stretch, 'normal')};`);
+	}
+
+	return `@font-face {\n\t${declarations.join('\n\t')}\n}`;
+}
+
+function getFontFileSource(file: ThemeFontFile) {
+	const path = typeof file === 'string' ? file : file.path;
+	if (!path) return '';
+
+	const format =
+		typeof file === 'string' ? inferFontFormat(file) : (file.format ?? inferFontFormat(path));
+	const formatPart = format ? ` format(${quoteCssString(format)})` : '';
+
+	return `url(${quoteCssString(path)})${formatPart}`;
+}
+
+function inferFontFormat(path: string) {
+	const extension = path.split('?')[0].split('.').pop()?.toLowerCase();
+	return extension ? formatByExtension[extension] : undefined;
+}
+
+function normalizeFontFamilies(value: string | string[] | undefined) {
+	const families = Array.isArray(value) ? value : String(value ?? '').split(',');
+	return families.map((family) => family.trim()).filter(Boolean);
+}
+
+function getFontStack(configuredFamilies: string[]) {
+	const families = configuredFamilies.length > 0 ? configuredFamilies : [defaultFontRoles.body];
+	const lowerCaseFamilies = new Set(families.map((family) => family.toLowerCase()));
+	const fallbackFamilies = fallbackFontFamilies.filter(
+		(family) => !lowerCaseFamilies.has(family.toLowerCase())
+	);
+
+	return [...families, ...fallbackFamilies].map(formatFontFamily).join(', ');
+}
+
+function formatFontFamily(family: string) {
+	return genericFontFamilies.has(family.toLowerCase()) ? family : quoteCssString(family);
+}
+
+function quoteCssString(value: string) {
+	return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ')}'`;
+}
+
+function safeCssValue(value: number | string | undefined, fallback: string) {
+	const normalized = String(value ?? fallback).trim();
+	return /^[a-zA-Z0-9\s.%+-]+$/.test(normalized) ? normalized : fallback;
+}
+
+function safeFontDisplay(value: string | undefined) {
+	const normalized = String(value ?? 'swap')
+		.trim()
+		.toLowerCase();
+	return ['auto', 'block', 'swap', 'fallback', 'optional'].includes(normalized)
+		? normalized
+		: 'swap';
 }
 
 function getPaletteThemeRoles(color: string, shade: SupportedMainShade): Record<ThemeRole, string> {

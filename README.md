@@ -67,6 +67,7 @@ Important sections:
 - `site`: name, URL, description, and locale for metadata
 - `theme.color`: Tailwind palette name, hex value, or RGB value used for the primary UI color
 - `theme.shade`: main shade for the primary UI color; supported values are `400`, `500`, `600`, `700`, and `800`
+- `theme.fonts`: optional custom font files and semantic font roles
 - `map.defaultYear`: the year the app opens with by default
 - `map.initialView`: default map view with `center`, `zoom`, and `bearing`
 - `map.keyboard`: panning distance for keyboard map movement
@@ -83,6 +84,40 @@ For a new use case, usually start with:
 5. Request your own free Protomaps API key at [protomaps.com/api](https://protomaps.com/api) and set it as `basemap.protomapsApiKey`.
 6. Rewrite or translate the text under `about`, `search`, `layers`, and `controls`.
 7. Check `search.countryCodes` if the app is used outside the Netherlands.
+
+### Custom fonts
+
+Noto Sans is bundled with the app and is always used as the fallback font. To use a custom font, place the font files in `static/fonts` and define them under `theme.fonts` in `config.yml`.
+
+```yaml
+theme:
+  fonts:
+    families:
+      - name: Example Sans
+        faces:
+          - weight: 400
+            style: normal
+            files:
+              - /fonts/ExampleSans-Regular.woff2
+          - weight: 700
+            style: normal
+            files:
+              - /fonts/ExampleSans-Bold.woff2
+    roles:
+      body: Noto Sans
+      accent: Example Sans
+      heading: Example Sans
+      display: Example Sans
+```
+
+Font roles map to the app's internal Tailwind font classes:
+
+- `body`: default page text
+- `accent`: compact UI elements such as the header and slider
+- `heading`: titles, badges, and shortcut key labels
+- `display`: reserved for larger display text
+
+Each role can be a single family name or a list, for example `heading: [Example Heading, Example Sans]`. The app automatically appends `Noto Sans, ui-sans-serif, system-ui, sans-serif` as fallback fonts. If `theme.fonts` is omitted, all roles use Noto Sans.
 
 ### `collection.yml`
 

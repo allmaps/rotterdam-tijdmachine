@@ -2,7 +2,7 @@
 	import './layout.css';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { getThemeStyle } from '$lib/theme';
+	import { getThemeHeadStyle } from '$lib/theme';
 	import type { AppConfig } from '$lib/types';
 
 	let {
@@ -17,7 +17,7 @@
 	let siteName = $derived(config.site.name);
 	let siteUrl = $derived(config.site.url);
 	let description = $derived(config.site.description);
-	let themeStyle = $derived(getThemeStyle(config.theme));
+	let themeStyle = $derived(getThemeHeadStyle(config.theme));
 </script>
 
 <svelte:head>
@@ -42,7 +42,7 @@
 
 	<link rel="canonical" href={siteUrl} />
 	<link rel="icon" href={favicon} />
-	{@html `<style>:root { ${themeStyle} }</style>`}
+	{@html `<style>${themeStyle}</style>`}
 </svelte:head>
 
 {@render children()}

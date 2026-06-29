@@ -384,6 +384,7 @@
 		class="absolute right-2 bottom-2 left-2 grid grid-flow-col items-center justify-items-center"
 	>
 		<div
+			data-map-layers-panel
 			class="z-30 flex min-h-14 w-full max-w-xl items-center gap-3 overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg"
 		>
 			<div class="relative min-w-0 flex-1 rounded hover:bg-gray-50">

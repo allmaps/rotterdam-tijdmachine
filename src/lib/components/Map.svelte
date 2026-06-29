@@ -16,6 +16,17 @@
 		MapToolbarCommand
 	} from '$lib/types';
 
+	type CameraPadding = {
+		top: number;
+		right: number;
+		bottom: number;
+		left: number;
+	};
+
+	const CAMERA_BASE_PADDING = 40;
+	const CAMERA_PANEL_GAP = 16;
+	const DESKTOP_SLIDER_INSET = 96;
+
 	let {
 		config,
 		annotation = $bindable(viewState.annotation),
@@ -34,6 +45,7 @@
 		mapToolbarCommand,
 		enableFlyTo = false,
 		enableLocationMarker = false,
+		navPosition = 'left',
 		controlsPosition = 'top-right'
 	}: {
 		config: AppConfig;
@@ -49,6 +61,7 @@
 		mapToolbarCommand?: MapToolbarCommand;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
+		navPosition?: 'left' | 'right';
 		controlsPosition?: 'top-left' | 'top-right';
 	} = $props();
 
@@ -107,7 +120,12 @@
 	// Vlieg naar locatie
 	$effect(() => {
 		if (enableFlyTo && mapReady && map && flyTo.center) {
-			map.flyTo({ center: flyTo.center, zoom: 14 });
+			const cameraPadding = getCameraPadding();
+			map.flyTo({
+				center: flyTo.center,
+				zoom: 14,
+				offset: getCameraOffset(cameraPadding)
+			});
 		}
 	});
 
@@ -270,17 +288,26 @@
 	function focusSelectedMap(annotationForFocus = actieveAnnotation) {
 		if (!map || !annotationForFocus) return;
 
+		const cameraPadding = getCameraPadding();
+
 		if (rotateToMapOrientation) {
-			const camera = getSelectedMapCamera(annotationForFocus);
+			const camera = getSelectedMapCamera(annotationForFocus, cameraPadding);
 			if (camera) {
-				map.easeTo({ ...camera, pitch: 0, duration: 350 });
+				map.flyTo({
+					...camera,
+					pitch: 0,
+					offset: getCameraOffset(cameraPadding)
+				});
 				return;
 			}
 		}
 
 		const bounds = getSelectedMapBounds(annotationForFocus);
 		if (bounds) {
-			map.fitBounds(bounds, { padding: 40 });
+			const camera = map.cameraForBounds(bounds, { padding: cameraPadding });
+			if (camera) {
+				map.flyTo({ ...camera, pitch: 0 });
+			}
 		}
 	}
 
@@ -318,16 +345,65 @@
 		return [...ids];
 	}
 
-	function getSelectedMapCamera(annotationForCheck: string) {
+	function getSelectedMapCamera(
+		annotationForCheck: string,
+		padding: number | CameraPadding = CAMERA_BASE_PADDING
+	) {
 		const ids = getSelectedMapIds(annotationForCheck);
 		if (!ids) return undefined;
 
 		try {
-			return warpedMapLayer.getMapsCenterZoomBearing(ids, { padding: 40 });
+			return warpedMapLayer.getMapsCenterZoomBearing(ids, { padding });
 		} catch (error) {
 			console.warn('Kon kaartoriëntatie niet bepalen:', error);
 			return undefined;
 		}
+	}
+
+	function getMapPaneElement() {
+		return mapElement?.closest<HTMLElement>('.map-pane');
+	}
+
+	function getBottomPanelInset() {
+		const pane = getMapPaneElement();
+		const panel = pane?.querySelector<HTMLElement>('[data-map-layers-panel]');
+		if (!panel) return 0;
+
+		const mapRect = mapElement.getBoundingClientRect();
+		const panelRect = panel.getBoundingClientRect();
+		if (panelRect.width === 0 || panelRect.height === 0) return 0;
+
+		return Math.max(0, Math.ceil(mapRect.bottom - panelRect.top));
+	}
+
+	function getSliderInset() {
+		const pane = getMapPaneElement();
+		const surface = pane?.querySelector<HTMLElement>('[data-time-slider-surface]');
+
+		if (surface) {
+			const surfaceStyle = getComputedStyle(surface);
+			if (surfaceStyle.display !== 'none' && surfaceStyle.visibility !== 'hidden') {
+				return Math.ceil(surface.getBoundingClientRect().width || DESKTOP_SLIDER_INSET);
+			}
+		}
+
+		return 0;
+	}
+
+	function getCameraPadding(): CameraPadding {
+		const bottomInset = getBottomPanelInset();
+		const sliderInset = getSliderInset();
+
+		return {
+			top: CAMERA_BASE_PADDING,
+			right: CAMERA_BASE_PADDING + (navPosition === 'right' ? sliderInset : 0),
+			bottom: Math.max(CAMERA_BASE_PADDING, bottomInset + CAMERA_PANEL_GAP),
+			left: CAMERA_BASE_PADDING + (navPosition === 'left' ? sliderInset : 0)
+		};
+	}
+
+	function getCameraOffset(padding: CameraPadding): [number, number] {
+		return [(padding.left - padding.right) / 2, (padding.top - padding.bottom) / 2];
 	}
 
 	function getSelectedMapVisibility(annotationForCheck: string) {

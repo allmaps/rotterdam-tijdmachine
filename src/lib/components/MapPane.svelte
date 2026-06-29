@@ -98,6 +98,7 @@
 			{mapToolbarCommand}
 			{enableFlyTo}
 			{enableLocationMarker}
+			{navPosition}
 			{controlsPosition}
 		/>
 		<MapLayers

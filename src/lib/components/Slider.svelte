@@ -200,6 +200,7 @@
 		>
 			{#snippet children({ tickItems })}
 				<span
+					data-time-slider-surface
 					class="time-slider-surface absolute z-5 h-full w-24 cursor-pointer overflow-hidden bg-transparent {sliderSurfaceClass}"
 				>
 					<BitsSlider.Range class="absolute w-full" />

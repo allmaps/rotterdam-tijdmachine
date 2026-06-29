@@ -2,17 +2,20 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import { X, Info } from '@lucide/svelte';
 	import { tick } from 'svelte';
-	import type { AppConfig } from '$lib/types';
+	import type { AppConfig, MapMetadata } from '$lib/types';
 
 	let {
 		config,
+		maps,
 		onClose
 	}: {
 		config: AppConfig;
+		maps: MapMetadata[];
 		onClose: () => void;
 	} = $props();
 
 	let closeButton: HTMLButtonElement | undefined = $state();
+	let institutions = $derived(getInstitutions(maps, config.site.locale));
 	const keyClass =
 		'inline-flex min-w-7 items-center justify-center rounded border border-gray-300 bg-gray-50 px-1.5 py-0.5 font-heading text-xs font-bold text-gray-800 shadow-sm';
 	const wideKeyClass =
@@ -23,6 +26,16 @@
 			closeButton?.focus();
 		});
 	});
+
+	function getInstitutions(maps: MapMetadata[], locale: string) {
+		const institutions = maps
+			.map((map) => map.institution.trim())
+			.filter((institution, index, allInstitutions) => {
+				return institution && allInstitutions.indexOf(institution) === index;
+			});
+
+		return institutions.toSorted(new Intl.Collator(locale).compare);
+	}
 </script>
 
 <Modal {onClose} ariaLabelledby="about-title" panelClass="max-h-[calc(100dvh-7rem)]">
@@ -43,7 +56,7 @@
 	</div>
 
 	<div class="overflow-y-auto px-5 py-5">
-		{#each config.about.paragraphs as paragraph, index}
+		{#each config.about.paragraphs as paragraph, index (index)}
 			<p
 				class="{index === config.about.paragraphs.length - 1
 					? ''
@@ -53,13 +66,26 @@
 			</p>
 		{/each}
 
+		{#if institutions.length > 0}
+			<section class="mt-6 border-t border-gray-200 pt-5">
+				<h3 class="mb-3 text-sm font-bold text-gray-900">{config.about.institutionsTitle}</h3>
+				<ul class="flex flex-wrap gap-2 text-sm text-gray-700">
+					{#each institutions as institution (institution)}
+						<li class="rounded bg-gray-100 px-2.5 py-1 font-medium">
+							{institution}
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
 		<section class="mt-6 border-t border-gray-200 pt-5">
 			<h3 class="mb-3 text-sm font-bold text-gray-900">{config.about.shortcutsTitle}</h3>
 			<dl class="space-y-3 text-sm text-gray-700">
-				{#each config.about.shortcuts as shortcut}
+				{#each config.about.shortcuts as shortcut (shortcut.description)}
 					<div class="grid grid-cols-[auto_1fr] items-center gap-3">
 						<dt class="flex flex-wrap items-center gap-1.5">
-							{#each shortcut.keys as key}
+							{#each shortcut.keys as key, keyIndex (keyIndex)}
 								{#if key === '/'}
 									<span class="text-xs text-gray-400">/</span>
 								{:else}

@@ -7,22 +7,18 @@
 	import { comparison, mapView, viewState } from '$lib/app-state.svelte.js';
 	import { getMapStartYear, mapIncludesYear } from '$lib/map-years';
 	import { LoaderCircle } from '@lucide/svelte';
+	import type { PageData } from './$types';
 	import type {
-		AppConfig,
 		GeocoderBounds,
 		MapKeyboardCommand,
 		MapLocation,
-		MapMetadata,
 		MapToolbarCommand
 	} from '$lib/types';
 
 	let {
 		data: pageData
 	}: {
-		data: {
-			config: AppConfig;
-			collection: MapMetadata[];
-		};
+		data: PageData;
 	} = $props();
 
 	let config = $derived(pageData.config);
@@ -389,7 +385,7 @@
 	</div>
 
 	{#if aboutOpen}
-		<About {config} onClose={() => (aboutOpen = false)} />
+		<About {config} maps={collection} onClose={() => (aboutOpen = false)} />
 	{/if}
 
 	{#if shareOpen}

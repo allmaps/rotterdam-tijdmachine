@@ -72,6 +72,7 @@ export type AppConfig = {
 		title: string;
 		closeLabel: string;
 		paragraphs: string[];
+		institutionsTitle: string;
 		shortcutsTitle: string;
 		shortcuts: Array<{
 			keys: string[];

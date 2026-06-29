@@ -97,7 +97,7 @@
 	<div
 		class="flex overflow-hidden rounded-md border border-gray-200 bg-white text-gray-800 shadow-lg"
 	>
-		{#each zoomControls as control}
+		{#each zoomControls as control (control.label)}
 			{@const Icon = control.icon}
 			<button
 				type="button"

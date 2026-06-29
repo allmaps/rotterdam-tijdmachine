@@ -105,7 +105,9 @@
 
 	<div class="px-5 py-5">
 		<p class="mb-4 text-gray-500">{config.share.description}</p>
-		<div class="mb-3 grid grid-cols-2 overflow-hidden rounded border border-gray-200 text-sm font-semibold">
+		<div
+			class="mb-3 grid grid-cols-2 overflow-hidden rounded border border-gray-200 text-sm font-semibold"
+		>
 			<button
 				type="button"
 				aria-pressed={shareMode === 'simple'}

@@ -145,8 +145,6 @@ export const mapView = $state({
 
 export const comparison = $state({
 	active: false,
-	leftAnnotation: '',
 	rightAnnotation: '',
-	leftOpacity: 100,
 	rightOpacity: 100
 });

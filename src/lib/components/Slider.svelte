@@ -48,9 +48,7 @@
 	let annotationsInViewSet = $derived(new Set(annotationsInView));
 	let inViewMaps = $derived(maps.filter((map) => annotationsInViewSet.has(map.annotation)));
 	let inViewAvailableYears = $derived(getExpandedMapYears(inViewMaps));
-	let selectableMaps = $derived(
-		inViewOnly && inViewAvailableYears.length > 0 ? inViewMaps : maps
-	);
+	let selectableMaps = $derived(inViewOnly && inViewAvailableYears.length > 0 ? inViewMaps : maps);
 	let selectableYears = $derived(
 		inViewOnly && inViewAvailableYears.length > 0 ? inViewAvailableYears : availableYears
 	);
@@ -113,9 +111,7 @@
 	function getAnnotationKeyForYear(year: number) {
 		return [
 			...new Set(
-				selectableMaps
-					.filter((map) => mapIncludesYear(map, year))
-					.map((map) => map.annotation)
+				selectableMaps.filter((map) => mapIncludesYear(map, year)).map((map) => map.annotation)
 			)
 		]
 			.sort()
@@ -143,8 +139,7 @@
 		if (range <= 0) return 50;
 
 		const trackRange = 100 - sliderTrackPadding * 2;
-		const bottomPosition =
-			sliderTrackPadding + ((year - sliderMinYear) / range) * trackRange;
+		const bottomPosition = sliderTrackPadding + ((year - sliderMinYear) / range) * trackRange;
 
 		return 100 - bottomPosition;
 	}

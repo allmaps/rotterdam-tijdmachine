@@ -27,11 +27,6 @@ export type WelcomeConfig =
 				title: string;
 				description: string;
 			}>;
-			shortcutsTitle: string;
-			shortcuts: Array<{
-				keys: string[];
-				description: string;
-			}>;
 	  };
 
 export type AppConfig = {

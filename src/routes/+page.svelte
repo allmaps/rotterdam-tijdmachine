@@ -133,7 +133,7 @@
 		const yearParam = yearFromParam(params.get('year'));
 		const initialMap = params.has('map')
 			? (mapForAnnotationParam(params.get('map')) ?? defaultMap)
-			: (yearParam !== undefined ? mapForYear(yearParam) : undefined) ?? defaultMap;
+			: ((yearParam !== undefined ? mapForYear(yearParam) : undefined) ?? defaultMap);
 		if (initialMap) {
 			viewState.annotation = initialMap.annotation;
 			selectedYear =
@@ -236,12 +236,7 @@
 	}
 
 	function isArrowKey(key: string) {
-		return (
-			key === 'ArrowLeft' ||
-			key === 'ArrowRight' ||
-			key === 'ArrowUp' ||
-			key === 'ArrowDown'
-		);
+		return key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown';
 	}
 
 	function handleMapNavigationKeydown(event: KeyboardEvent) {

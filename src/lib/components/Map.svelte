@@ -51,6 +51,7 @@
 			bearing: config.map.initialView.bearing
 		}),
 		annotationsInView = $bindable<string[]>([]),
+		// eslint-disable-next-line no-useless-assignment -- This bindable prop is written back to the parent.
 		geocoderBounds = $bindable(),
 		mapKeyboardCommand,
 		mapToolbarCommand,
@@ -109,6 +110,7 @@
 	const basemapLayers = untrack(() =>
 		getProtomapsLayers('light', undefined, { lang: config.site.locale })
 	);
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Internal MapLibre image loading cache, not UI state.
 	const loadedStyleImages = new Set<string>();
 	let canZoomToActiveMap = $derived(
 		loaded && !!activeAnnotation && (mapIdsByAnnotation.get(activeAnnotation)?.size ?? 0) > 0
@@ -317,11 +319,7 @@
 		ensureSelectedLocationLayer();
 		const source = map.getSource(LOCATION_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 		source?.setData(createLocationData(center));
-		map.setPaintProperty(
-			LOCATION_LAYER_ID,
-			'circle-color',
-			getBrandMainColorExpression()
-		);
+		map.setPaintProperty(LOCATION_LAYER_ID, 'circle-color', getBrandMainColorExpression());
 
 		if (selectedLocationTimer) clearTimeout(selectedLocationTimer);
 		selectedLocationTimer = setTimeout(() => {
@@ -346,17 +344,7 @@
 				type: 'circle',
 				source: LOCATION_SOURCE_ID,
 				paint: {
-					'circle-radius': [
-						'interpolate',
-						['linear'],
-						['zoom'],
-						10,
-						7,
-						15,
-						13,
-						18,
-						18
-					],
+					'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 7, 15, 13, 18, 18],
 					'circle-color': getBrandMainColorExpression(),
 					'circle-opacity': 0.82,
 					'circle-stroke-color': '#ffffff',

@@ -96,11 +96,11 @@ Before deploying a reused version of the app, update:
 
 For example:
 
-| Deployment target | `PAGES_BASE_PATH` |
-| --- | --- |
+| Deployment target                                  | `PAGES_BASE_PATH`                 |
+| -------------------------------------------------- | --------------------------------- |
 | `https://allmaps.github.io/rotterdam-tijdmachine/` | `/rotterdam-tijdmachine` or unset |
 | `https://pages.allmaps.org/rotterdam-tijdmachine/` | `/rotterdam-tijdmachine` or unset |
-| `https://tijdmachine.example.org/` | `/` |
+| `https://tijdmachine.example.org/`                 | `/`                               |
 
 To deploy an alternate configuration, set the repository variable `CONFIG` to a file such as `content/config-gouda.yml`, or fill in the `config` input when manually running the workflow.
 

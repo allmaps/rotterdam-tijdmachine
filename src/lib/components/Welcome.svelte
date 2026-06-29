@@ -12,9 +12,7 @@
 
 	let open = $state(false);
 	let closeButton: HTMLButtonElement | undefined = $state();
-	let welcome = $derived(
-		isEnabledWelcome(config.welcome) ? config.welcome : undefined
-	);
+	let welcome = $derived(isEnabledWelcome(config.welcome) ? config.welcome : undefined);
 	let sections = $derived(welcome?.sections ?? []);
 	let storageKey = $derived(
 		welcome?.storageKey ||
@@ -50,7 +48,7 @@
 	}
 
 	function getSectionIcon(index: number) {
-		return [Clock10, Layers, Columns2][index] ?? Map;
+		return [Clock10, Layers, Columns2][index] ?? Layers;
 	}
 
 	function isEnabledWelcome(

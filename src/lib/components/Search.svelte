@@ -252,6 +252,7 @@
 
 		<p class="border-t border-gray-100 px-4 py-2 text-xs font-light text-gray-500">
 			{config.search.attribution.prefix}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={config.search.attribution.providerUrl}
 				target="_blank"
@@ -265,6 +266,7 @@
 				rel="noopener noreferrer"
 				class="hover:text-brand-main">{config.search.attribution.copyright}</a
 			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		</p>
 	</Modal>
 {/if}

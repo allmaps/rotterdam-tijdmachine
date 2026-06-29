@@ -65,8 +65,8 @@
 		controlsPosition?: 'top-left' | 'top-right';
 	} = $props();
 
-	let actieveAnnotation = $derived(annotation);
-	let actieveOpacity = $derived((opacity ?? 100) / 100);
+	let activeAnnotation = $derived(annotation);
+	let activeOpacity = $derived((opacity ?? 100) / 100);
 
 	let mapElement: HTMLDivElement;
 	let map = $state<maplibregl.Map>();
@@ -97,27 +97,27 @@
 	);
 	const loadedStyleImages = new Set<string>();
 	let canZoomToActiveMap = $derived(
-		loaded && !!actieveAnnotation && (mapIdsByAnnotation.get(actieveAnnotation)?.size ?? 0) > 0
+		loaded && !!activeAnnotation && (mapIdsByAnnotation.get(activeAnnotation)?.size ?? 0) > 0
 	);
 
-	// Laad de kaartlaag als de annotatie verandert
+	// Load the warped map layer when the selected annotation changes.
 	$effect(() => {
-		if (loaded && actieveAnnotation && mapIdsByAnnotation.size > 0) {
-			const idsToShow = mapIdsByAnnotation.get(actieveAnnotation) ?? new Set();
+		if (loaded && activeAnnotation && mapIdsByAnnotation.size > 0) {
+			const idsToShow = mapIdsByAnnotation.get(activeAnnotation) ?? new Set();
 			warpedMapLayer.setMapsOptions((id: string) =>
 				idsToShow.has(id) ? { visible: true } : { visible: false }
 			);
 		}
 	});
 
-	// Pas transparantie aan
+	// Apply warped map opacity.
 	$effect(() => {
 		if (loaded) {
-			warpedMapLayer.setOpacity(actieveOpacity);
+			warpedMapLayer.setOpacity(activeOpacity);
 		}
 	});
 
-	// Vlieg naar locatie
+	// Fly to the selected search location.
 	$effect(() => {
 		if (enableFlyTo && mapReady && map && flyTo.center) {
 			const cameraPadding = getCameraPadding();
@@ -129,7 +129,7 @@
 		}
 	});
 
-	// Tijdelijke marker
+	// Show a temporary location marker.
 	$effect(() => {
 		if (enableLocationMarker && mapReady && map && selectedLocation.center) {
 			const marker = new maplibregl.Marker().setLngLat(selectedLocation.center).addTo(map);
@@ -140,7 +140,7 @@
 		}
 	});
 
-	// Synchroniseer kaartpositie met de gebonden locatie.
+	// Synchronize the map position with the bound location.
 	$effect(() => {
 		if (mapReady && map && currentLocation) {
 			const center = currentLocation.center;
@@ -154,9 +154,9 @@
 		}
 	});
 
-	// Waarschuw pas bij selectie/laden; gewone kaartbewegingen mogen niet blijven storen.
+	// Warn only after selection or loading; ordinary map movements should not keep interrupting.
 	$effect(() => {
-		const annotationForCheck = actieveAnnotation;
+		const annotationForCheck = activeAnnotation;
 		if (annotationForCheck !== previousAnnotationForVisibility) {
 			previousAnnotationForVisibility = annotationForCheck;
 			dismissedVisibilityWarningAnnotation = undefined;
@@ -185,7 +185,7 @@
 
 	$effect(() => {
 		const shouldRotate = rotateToMapOrientation;
-		const annotationForOrientation = actieveAnnotation;
+		const annotationForOrientation = activeAnnotation;
 		if (!loaded || !mapReady || !map) return;
 
 		const orientationChanged = shouldRotate !== previousRotateToMapOrientation;
@@ -205,7 +205,7 @@
 	$effect(() => {
 		const shouldFocus = focusActiveMap;
 		const shouldRotate = rotateToMapOrientation;
-		const annotationForFocus = actieveAnnotation;
+		const annotationForFocus = activeAnnotation;
 		if (!loaded || !mapReady || !map) return;
 
 		const focusChanged = shouldFocus !== previousFocusActiveMap;
@@ -285,7 +285,7 @@
 		return /^https?:\/\//.test(id) || id.startsWith('/') || id.startsWith('data:');
 	}
 
-	function focusSelectedMap(annotationForFocus = actieveAnnotation) {
+	function focusSelectedMap(annotationForFocus = activeAnnotation) {
 		if (!map || !annotationForFocus) return;
 
 		const cameraPadding = getCameraPadding();
@@ -355,7 +355,7 @@
 		try {
 			return warpedMapLayer.getMapsCenterZoomBearing(ids, { padding });
 		} catch (error) {
-			console.warn('Kon kaartoriëntatie niet bepalen:', error);
+			console.warn('Could not determine map orientation:', error);
 			return undefined;
 		}
 	}
@@ -428,8 +428,8 @@
 		return 'not-visible';
 	}
 
-	function checkSelectedMapVisibility(annotationForCheck = actieveAnnotation, showWarning = false) {
-		if (!annotationForCheck || annotationForCheck !== actieveAnnotation) return;
+	function checkSelectedMapVisibility(annotationForCheck = activeAnnotation, showWarning = false) {
+		if (!annotationForCheck || annotationForCheck !== activeAnnotation) return;
 
 		selectedMapVisibility = getSelectedMapVisibility(annotationForCheck);
 
@@ -441,7 +441,6 @@
 		if (
 			showWarning &&
 			selectedMapVisibility === 'not-visible' &&
-			// (selectedMapVisibility === 'partly-visible' || selectedMapVisibility === 'not-visible') &&
 			dismissedVisibilityWarningAnnotation !== annotationForCheck
 		) {
 			visibilityWarningOpen = true;
@@ -449,7 +448,7 @@
 	}
 
 	function dismissVisibilityWarning() {
-		dismissedVisibilityWarningAnnotation = actieveAnnotation;
+		dismissedVisibilityWarningAnnotation = activeAnnotation;
 		visibilityWarningOpen = false;
 	}
 
@@ -539,7 +538,7 @@
 
 		mapInstance.on('moveend', () => {
 			updateAnnotationsInView();
-			checkSelectedMapVisibility(actieveAnnotation, false);
+			checkSelectedMapVisibility(activeAnnotation, false);
 		});
 
 		mapInstance.on('load', async () => {

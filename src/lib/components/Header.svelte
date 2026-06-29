@@ -7,12 +7,12 @@
 	let {
 		searchBounds,
 		config,
-		onOverOpen,
+		onAboutOpen,
 		onShareOpen
 	}: {
 		searchBounds?: GeocoderBounds;
 		config: AppConfig;
-		onOverOpen: () => void;
+		onAboutOpen: () => void;
 		onShareOpen: () => void;
 	} = $props();
 
@@ -52,7 +52,7 @@
 
 		<div class="flex flex-1 justify-end gap-1 md:gap-2">
 			<button
-				onclick={onOverOpen}
+				onclick={onAboutOpen}
 				aria-label={config.header.about}
 				class="flex h-8 cursor-pointer items-center gap-1 rounded px-2 text-sm font-semibold hover:bg-brand-hover md:px-3"
 			>

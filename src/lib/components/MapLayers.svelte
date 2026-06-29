@@ -575,12 +575,6 @@
 						<span class="min-w-0 truncate">{config.layers.inView}</span>
 					</button>
 				</div>
-
-				<!-- {#if selectedYear !== resolvedYear}
-					<p class="text-xs font-medium text-gray-500">
-						Geselecteerd jaar {selectedYear}; getoond wordt {resolvedYear}.
-					</p>
-				{/if} -->
 			</div>
 
 			{#if visibleMaps.length > 0}

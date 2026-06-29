@@ -56,7 +56,7 @@
 		};
 	});
 
-	let overOpen = $state(false);
+	let aboutOpen = $state(false);
 	let shareOpen = $state(false);
 	let currentLocation = $state<MapLocation>(initial.defaultLocation);
 	let geocoderBounds = $state<GeocoderBounds>();
@@ -333,7 +333,7 @@
 	<Header
 		{config}
 		searchBounds={geocoderBounds}
-		onOverOpen={() => (overOpen = true)}
+		onAboutOpen={() => (aboutOpen = true)}
 		onShareOpen={() => (shareOpen = true)}
 	/>
 
@@ -381,8 +381,8 @@
 		{/if}
 	</div>
 
-	{#if overOpen}
-		<About {config} onClose={() => (overOpen = false)} />
+	{#if aboutOpen}
+		<About {config} onClose={() => (aboutOpen = false)} />
 	{/if}
 
 	{#if shareOpen}

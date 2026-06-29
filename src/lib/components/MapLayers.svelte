@@ -1,6 +1,7 @@
 <script lang="ts">
+	import AllmapsLogo from '$lib/components/AllmapsLogo.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import { favorites, toggleFavorite } from '$lib/app-state.svelte.js';
+	import { configureFavoritesStorage, favorites, toggleFavorite } from '$lib/app-state.svelte.js';
 	import {
 		ChevronLeft,
 		ChevronRight,
@@ -8,7 +9,6 @@
 		Copy,
 		Eye,
 		ExternalLink,
-		Layers,
 		MapPinned,
 		PanelLeft,
 		PanelRight,
@@ -52,6 +52,10 @@
 
 	let maps = $derived(mapMetadata);
 	let availableYears = $derived(getExpandedMapYears(maps));
+	let favoriteStorageScope = $derived(
+		[config.site.url || config.site.name || 'default', config.collection ?? 'collection'].join(':')
+	);
+	let favoriteAnnotations = $derived(maps.map((map) => map.annotation));
 
 	let layersOpen = $state(false);
 	let showCollection = $state(false);
@@ -72,11 +76,11 @@
 	let annotationsInViewSet = $derived(new Set(annotationsInView));
 	let inViewMaps = $derived(maps.filter((map) => annotationsInViewSet.has(map.annotation)));
 	let selectionMaps = $derived(preferInViewMaps && inViewMaps.length > 0 ? inViewMaps : maps);
-	let selectionAvailableYears = $derived(
-		getExpandedMapYears(selectionMaps)
-	);
+	let selectionAvailableYears = $derived(getExpandedMapYears(selectionMaps));
 	let resolvedYear = $derived(resolveAvailableYear(selectedYear, selectionAvailableYears));
-	let mapsForResolvedYear = $derived(selectionMaps.filter((map) => mapIncludesYear(map, resolvedYear)));
+	let mapsForResolvedYear = $derived(
+		selectionMaps.filter((map) => mapIncludesYear(map, resolvedYear))
+	);
 	let mapsForVisibleYear = $derived(maps.filter((map) => mapIncludesYear(map, resolvedYear)));
 	let activeMap = $derived(
 		mapsForResolvedYear.find((map) => map.annotation === annotation) ?? mapsForResolvedYear[0]
@@ -100,6 +104,10 @@
 			visibleMaps.length === 1 ? config.layers.resultSingular : config.layers.resultPlural
 		}`
 	);
+
+	$effect(() => {
+		configureFavoritesStorage(favoriteStorageScope, favoriteAnnotations);
+	});
 
 	$effect(() => {
 		if (activeMap && !mapsForResolvedYear.some((map) => map.annotation === annotation)) {
@@ -396,7 +404,9 @@
 					onclick={openLayers}
 					class="absolute inset-0 z-0 cursor-pointer rounded focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-main"
 				></button>
-				<div class="pointer-events-none relative z-10 flex min-w-0 items-center gap-2 px-2 pt-1 pb-0.5">
+				<div
+					class="pointer-events-none relative z-10 flex min-w-0 items-center gap-2 px-2 pt-1 pb-0.5"
+				>
 					<span
 						class="flex-none rounded bg-gray-900 px-1.5 py-0.5 font-heading text-[0.65rem] text-white"
 					>
@@ -455,9 +465,9 @@
 				aria-haspopup="dialog"
 				aria-controls={modalId}
 				onclick={openLayers}
-				class="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+				class="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded text-gray-900 hover:bg-gray-100"
 			>
-				<Layers class="h-4 w-4" />
+				<AllmapsLogo class="h-6 w-6" />
 			</button>
 		</div>
 	</div>
@@ -470,7 +480,7 @@
 			onKeydown={handleKeydown}
 		>
 			<div class="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
-				<Layers class="h-5 w-5 flex-none text-brand-main" />
+				<AllmapsLogo class="h-6 w-6 flex-none text-brand-main" />
 				<div class="min-w-0 flex-1">
 					<h2 id={modalTitleId} class="text-lg leading-6 font-semibold">
 						{config.layers.title}
@@ -590,17 +600,17 @@
 						>
 							<button
 								type="button"
-								aria-label="{config.layers
-									.selectMap} {map.label} ({getMapYearLabel(map)}, {map.institution})"
+								aria-label="{config.layers.selectMap} {map.label} ({getMapYearLabel(
+									map
+								)}, {map.institution})"
 								onclick={() => selectMap(map)}
 								onmouseenter={() => (selectedIndex = index)}
-								class="absolute inset-0 z-0 cursor-pointer text-left transition focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-main {index === selectedIndex
+								class="absolute inset-0 z-0 cursor-pointer text-left transition focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-main {index ===
+								selectedIndex
 									? 'bg-brand-soft'
 									: 'hover:bg-gray-50'}"
 							></button>
-							<div
-								class="pointer-events-none relative z-10 flex min-w-0 items-stretch"
-							>
+							<div class="pointer-events-none relative z-10 flex min-w-0 items-stretch">
 								<div class="min-w-0 flex-1">
 									<div class="w-full min-w-0 px-4 pt-3 pb-1 text-left">
 										<div class="flex min-w-0 items-start justify-between gap-2">
@@ -624,11 +634,13 @@
 												</span>
 											{/if}
 										</div>
-										<p class="mt-1 break-words text-xs leading-4 text-gray-500">
+										<p class="mt-1 text-xs leading-4 break-words text-gray-500">
 											{map.title}
 										</p>
 									</div>
-									<div class="flex flex-wrap gap-1 px-4 pb-3 text-[0.65rem] font-semibold text-gray-500">
+									<div
+										class="flex flex-wrap gap-1 px-4 pb-3 text-[0.65rem] font-semibold text-gray-500"
+									>
 										<a
 											href={map.url}
 											target="_blank"

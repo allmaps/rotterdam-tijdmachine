@@ -5,8 +5,6 @@
 	import { AlertTriangle, Focus } from '@lucide/svelte';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { viewState, flyTo, selectedLocation } from '$lib/app-state.svelte.js';
-	import { replaceState } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { getProtomapsLayers, getProtomapsStyle } from '$lib/basemap';
 	import { annotationsByMapId, getWarpedMapList, mapIdsByAnnotation } from '$lib/warped-map-list';
 	import MapControls from '$lib/components/MapControls.svelte';
@@ -34,7 +32,6 @@
 		geocoderBounds = $bindable(),
 		mapKeyboardCommand,
 		mapToolbarCommand,
-		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
 		controlsPosition = 'top-right'
@@ -50,7 +47,6 @@
 		geocoderBounds?: GeocoderBounds;
 		mapKeyboardCommand?: MapKeyboardCommand;
 		mapToolbarCommand?: MapToolbarCommand;
-		syncUrl?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		controlsPosition?: 'top-left' | 'top-right';
@@ -79,7 +75,6 @@
 	let previousToolbarCommandId = 0;
 	let commandIdsInitialized = false;
 	let visibilityCheckFrame: number | undefined;
-	let urlSyncFrame: number | undefined;
 	let isSyncing = false;
 	let warpedMapList = getWarpedMapList();
 	let warpedMapLayer = new WarpedMapLayer({ visible: false, warpedMapList });
@@ -99,12 +94,6 @@
 			warpedMapLayer.setMapsOptions((id: string) =>
 				idsToShow.has(id) ? { visible: true } : { visible: false }
 			);
-		}
-	});
-
-	$effect(() => {
-		if (syncUrl && mapReady && map && actieveAnnotation) {
-			queueBrowserUrlUpdate();
 		}
 	});
 
@@ -272,50 +261,6 @@
 
 	function bearingDifference(a: number, b: number) {
 		return Math.abs(((a - b + 540) % 360) - 180);
-	}
-
-	function updateBrowserUrl() {
-		if (!map) return;
-
-		const center = map.getCenter();
-		const params = new URLSearchParams({
-			lat: center.lat.toFixed(5),
-			lng: center.lng.toFixed(5),
-			zoom: map.getZoom().toFixed(2),
-			year: String(actieveAnnotation)
-		});
-		const bearing = map.getBearing();
-		if (bearingDifference(bearing, 0) >= 0.005) {
-			params.set('bearing', bearing.toFixed(2));
-		}
-		replaceBrowserUrl(resolve(`/?${params.toString()}`));
-	}
-
-	function queueBrowserUrlUpdate() {
-		if (urlSyncFrame !== undefined) {
-			cancelAnimationFrame(urlSyncFrame);
-		}
-
-		urlSyncFrame = requestAnimationFrame(() => {
-			urlSyncFrame = undefined;
-			updateBrowserUrl();
-		});
-	}
-
-	function replaceBrowserUrl(url: string, retry = true) {
-		try {
-			replaceState(url, {});
-		} catch (error) {
-			if (
-				retry &&
-				error instanceof Error &&
-				error.message.includes('before router is initialized')
-			) {
-				requestAnimationFrame(() => replaceBrowserUrl(url, false));
-			} else {
-				console.warn('Kon URL niet bijwerken:', error);
-			}
-		}
 	}
 
 	function isImageUrl(id: string) {
@@ -519,10 +464,6 @@
 		mapInstance.on('moveend', () => {
 			updateAnnotationsInView();
 			checkSelectedMapVisibility(actieveAnnotation, false);
-
-			if (syncUrl) {
-				updateBrowserUrl();
-			}
 		});
 
 		mapInstance.on('load', async () => {
@@ -551,9 +492,6 @@
 		return () => {
 			if (visibilityCheckFrame !== undefined) {
 				cancelAnimationFrame(visibilityCheckFrame);
-			}
-			if (urlSyncFrame !== undefined) {
-				cancelAnimationFrame(urlSyncFrame);
 			}
 			mapInstance.remove();
 			annotationsInView = [];

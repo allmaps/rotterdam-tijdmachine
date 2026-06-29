@@ -58,6 +58,8 @@ export type AppConfig = {
 		title: string;
 		closeLabel: string;
 		description: string;
+		simpleLink: string;
+		viewLink: string;
 		copy: string;
 		copied: string;
 	};

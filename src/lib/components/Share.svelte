@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
 	import { Check, Copy, X, Share2 } from '@lucide/svelte';
-	import { onMount, tick } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { mapView, viewState } from '$lib/app-state.svelte.js';
+	import { tick } from 'svelte';
 	import type { AppConfig } from '$lib/types';
 
 	let {
@@ -12,18 +14,19 @@
 		onClose: () => void;
 	} = $props();
 
-	let url = $state('');
+	type ShareMode = 'simple' | 'view';
+
+	let shareMode = $state<ShareMode>('simple');
+	let url = $derived(shareMode === 'view' ? getViewUrl() : getSimpleUrl());
 	let copied = $state(false);
 	let inputElement: HTMLInputElement | undefined = $state();
 	let copiedTimer: ReturnType<typeof setTimeout> | null = null;
 
-	onMount(() => {
-		url = getCurrentUrl();
-	});
-
 	$effect(() => {
+		const selectedUrl = url;
 		tick().then(() => {
 			if (!shouldAutoSelectInput()) return;
+			if (inputElement?.value !== selectedUrl) return;
 
 			inputElement?.focus({ preventScroll: true });
 			inputElement?.select();
@@ -36,13 +39,43 @@
 		return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 	}
 
-	function getCurrentUrl() {
-		return typeof window === 'undefined' ? '' : window.location.href;
+	function getSimpleUrl() {
+		if (typeof window === 'undefined') return config.site.url;
+
+		return new URL(resolve('/'), window.location.origin).href;
+	}
+
+	function getViewUrl() {
+		const viewUrl = new URL(getSimpleUrl());
+		const [lng, lat] = mapView.center;
+
+		if (Number.isFinite(lat) && Number.isFinite(lng)) {
+			viewUrl.searchParams.set('lat', lat.toFixed(5));
+			viewUrl.searchParams.set('lng', lng.toFixed(5));
+		}
+
+		if (Number.isFinite(mapView.zoom)) {
+			viewUrl.searchParams.set('zoom', mapView.zoom.toFixed(2));
+		}
+
+		if (viewState.annotation) {
+			viewUrl.searchParams.set('map', viewState.annotation);
+		}
+
+		if (Number.isFinite(mapView.bearing) && Math.abs(mapView.bearing) >= 0.005) {
+			viewUrl.searchParams.set('bearing', mapView.bearing.toFixed(2));
+		}
+
+		return viewUrl.href;
+	}
+
+	function selectShareMode(mode: ShareMode) {
+		shareMode = mode;
+		if (copiedTimer) clearTimeout(copiedTimer);
+		copied = false;
 	}
 
 	async function copyUrl() {
-		url = getCurrentUrl();
-
 		try {
 			await navigator.clipboard.writeText(url);
 		} catch {
@@ -72,6 +105,28 @@
 
 	<div class="px-5 py-5">
 		<p class="mb-4 text-gray-500">{config.share.description}</p>
+		<div class="mb-3 grid grid-cols-2 overflow-hidden rounded border border-gray-200 text-sm font-semibold">
+			<button
+				type="button"
+				aria-pressed={shareMode === 'simple'}
+				onclick={() => selectShareMode('simple')}
+				class="cursor-pointer px-3 py-2 {shareMode === 'simple'
+					? 'bg-brand-main text-white'
+					: 'bg-white text-gray-700 hover:bg-gray-100'}"
+			>
+				{config.share.simpleLink}
+			</button>
+			<button
+				type="button"
+				aria-pressed={shareMode === 'view'}
+				onclick={() => selectShareMode('view')}
+				class="cursor-pointer border-l border-gray-200 px-3 py-2 {shareMode === 'view'
+					? 'bg-brand-main text-white'
+					: 'bg-white text-gray-700 hover:bg-gray-100'}"
+			>
+				{config.share.viewLink}
+			</button>
+		</div>
 		<div class="flex flex-col gap-2 sm:flex-row">
 			<input
 				bind:this={inputElement}

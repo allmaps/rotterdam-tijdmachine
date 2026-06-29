@@ -62,7 +62,9 @@ about:
 share:
   title: Deel jouw tijdreis
   closeLabel: Sluit delen
-  description: Deel het kaartgedeelte dat jij nu bekijkt.
+  description: Kies of je de algemene pagina of de huidige kaartuitsnede wilt delen.
+  simpleLink: Eenvoudige link
+  viewLink: Huidige uitsnede
   copy: Kopieer
   copied: Gekopieerd
 

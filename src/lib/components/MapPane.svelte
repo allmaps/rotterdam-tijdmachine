@@ -30,7 +30,6 @@
 		layersId = `map-layers-${navPosition}`,
 		bordered = false,
 		showMapYearTicks = true,
-		syncUrl = false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
 		enableLayersShortcut = false,
@@ -50,7 +49,6 @@
 		layersId?: string;
 		bordered?: boolean;
 		showMapYearTicks?: boolean;
-		syncUrl?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		enableLayersShortcut?: boolean;
@@ -98,7 +96,6 @@
 			{config}
 			{mapKeyboardCommand}
 			{mapToolbarCommand}
-			{syncUrl}
 			{enableFlyTo}
 			{enableLocationMarker}
 			{controlsPosition}

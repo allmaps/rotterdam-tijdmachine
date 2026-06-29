@@ -131,6 +131,34 @@ The basemap uses Protomaps in `src/lib/basemap.ts`, with the API key configured 
 
 The Nominatim search bounds are derived from the bounds of the Allmaps layer. For a new collection, check that the combined annotations cover the area you want users to search.
 
+### Constructing URLs
+
+The app opens with the default map and view from `config.yml` when no query parameters are provided:
+
+```text
+https://example.org/time-machine/
+```
+
+You can link to a year with the `year` parameter. This parameter only accepts a numeric year and selects the first map in `collection.yml` for that year:
+
+```text
+https://example.org/time-machine/?year=1897
+```
+
+You can link to a specific map with the `map` parameter. This parameter only accepts an annotation URL that exists in `collection.yml`:
+
+```text
+https://example.org/time-machine/?map=https%3A%2F%2Fannotations.allmaps.org%2Fmanifests%2Fexample
+```
+
+If `year` and `map` are both present, `map` takes preference. To link to a specific view, add `lat`, `lng`, and optionally `zoom` and `bearing`:
+
+```text
+https://example.org/time-machine/?lat=51.92146&lng=4.48488&zoom=14.00&map=https%3A%2F%2Fannotations.allmaps.org%2Fmanifests%2Fexample
+```
+
+The sharing modal keeps the default link simple and only includes view parameters when the current-view option is selected.
+
 ## Project Structure
 
 - `config.yml`: app settings, text, and metadata

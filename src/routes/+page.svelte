@@ -89,14 +89,17 @@
 		return collection.find((map) => map.year === year);
 	}
 
-	function mapForYearParam(value: string | null) {
+	function mapForAnnotationParam(value: string | null) {
 		if (!value) return undefined;
 
-		const mapForAnnotation = collection.find((map) => map.annotation === value);
-		if (mapForAnnotation) return mapForAnnotation;
+		return collection.find((map) => map.annotation === value);
+	}
 
+	function mapForYearParam(value: string | null) {
+		if (!value) return undefined;
 		const numericYear = Number(value);
-		return Number.isFinite(numericYear) ? mapForYear(numericYear) : undefined;
+
+		return Number.isInteger(numericYear) ? mapForYear(numericYear) : undefined;
 	}
 
 	function numberParam(params: URLSearchParams, key: string) {
@@ -120,7 +123,9 @@
 	}
 
 	function applyInitialParams(params: URLSearchParams) {
-		const initialMap = mapForYearParam(params.get('year')) ?? defaultMap;
+		const initialMap = params.has('map')
+			? (mapForAnnotationParam(params.get('map')) ?? defaultMap)
+			: (mapForYearParam(params.get('year')) ?? defaultMap);
 		if (initialMap) {
 			viewState.annotation = initialMap.annotation;
 			selectedYear = initialMap.year;
@@ -317,7 +322,6 @@
 				bind:geocoderBounds
 				{mapKeyboardCommand}
 				{mapToolbarCommand}
-				syncUrl
 				enableFlyTo
 				enableLocationMarker
 				enableLayersShortcut

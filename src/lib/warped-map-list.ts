@@ -1,7 +1,8 @@
+import { base } from '$app/paths';
 import { WarpedMapList } from '@allmaps/render';
 import { parseAnnotation } from '@allmaps/annotation';
+import { resolvePublicAssetUrl } from '$lib/asset-urls';
 import { collection } from '$lib/content';
-import { getAnnotationFetchUrl } from '$lib/annotation-urls';
 
 import type { WebGL2WarpedMap } from '@allmaps/render/webgl2';
 
@@ -33,7 +34,7 @@ export const getWarpedMapList = () => {
 };
 
 async function loadAnnotation(url: string) {
-	const fetchUrl = getAnnotationFetchUrl(url);
+	const fetchUrl = resolvePublicAssetUrl(url, base);
 	const resp = await fetch(fetchUrl);
 	if (!resp.ok) {
 		throw new Error(`Annotation request failed with status ${resp.status}`);

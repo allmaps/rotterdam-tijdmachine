@@ -1,3 +1,4 @@
+import { resolvePublicAssetUrl } from '$lib/asset-urls';
 import type { AppConfig } from '$lib/types';
 
 const fallbackThemeColor = '#15803d';
@@ -139,27 +140,7 @@ function getFontFileSource(file: ThemeFontFile, basePath: string) {
 		typeof file === 'string' ? inferFontFormat(file) : (file.format ?? inferFontFormat(path));
 	const formatPart = format ? ` format(${quoteCssString(format)})` : '';
 
-	return `url(${quoteCssString(resolveStaticAssetPath(path, basePath))})${formatPart}`;
-}
-
-function resolveStaticAssetPath(path: string, basePath: string) {
-	const normalizedPath = path.trim();
-	if (!normalizedPath || isAbsoluteAssetPath(normalizedPath)) return normalizedPath;
-
-	const normalizedBasePath = basePath === '/' ? '' : basePath.replace(/\/$/, '');
-	if (
-		normalizedBasePath &&
-		(normalizedPath === normalizedBasePath || normalizedPath.startsWith(`${normalizedBasePath}/`))
-	) {
-		return normalizedPath;
-	}
-
-	const publicPath = normalizedPath.replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '');
-	return `${normalizedBasePath}/${publicPath}`;
-}
-
-function isAbsoluteAssetPath(path: string) {
-	return /^[a-z][a-z\d+.-]*:/i.test(path) || path.startsWith('//');
+	return `url(${quoteCssString(resolvePublicAssetUrl(path, basePath))})${formatPart}`;
 }
 
 function inferFontFormat(path: string) {

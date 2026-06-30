@@ -152,7 +152,7 @@ For a new use case, usually start with:
 
 ### Custom fonts
 
-Noto Sans is bundled with the app and is always used as the fallback font. To use a custom font, place the font files in `static/fonts` and define them under `theme.fonts` in `config.yml`. Font paths are resolved through SvelteKit's base path, so both `fonts/ExampleSans-Regular.woff2` and `/fonts/ExampleSans-Regular.woff2` work when deploying under a subpath.
+Noto Sans is bundled with the app and is always used as the fallback font. To use a custom font, place the font files in `static/fonts` and define them under `theme.fonts` in `config.yml`. Font paths are resolved through SvelteKit's base path, so both `fonts/ExampleSans-Regular.woff2` and `/fonts/ExampleSans-Regular.woff2` work when deploying under a subpath. Absolute font URLs, such as CDN-hosted `https://...` URLs, can also be used.
 
 ```yaml
 theme:

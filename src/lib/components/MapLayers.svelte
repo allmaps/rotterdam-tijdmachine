@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import AllmapsLogo from '$lib/components/AllmapsLogo.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { configureFavoritesStorage, favorites, toggleFavorite } from '$lib/app-state.svelte.js';
+	import { resolveAbsolutePublicAssetUrl } from '$lib/asset-urls';
 	import {
 		ChevronLeft,
 		ChevronRight,
@@ -24,7 +26,6 @@
 		getMapYearLabel,
 		mapIncludesYear
 	} from '$lib/map-years';
-	import { getAnnotationPublicUrl } from '$lib/annotation-urls';
 	import type { AppConfig, MapMetadata } from '$lib/types';
 
 	let {
@@ -263,7 +264,7 @@
 		const origin =
 			typeof window === 'undefined' ? new URL(config.site.url).origin : window.location.origin;
 
-		return getAnnotationPublicUrl(annotationUrl, origin);
+		return resolveAbsolutePublicAssetUrl(annotationUrl, origin, base);
 	}
 
 	async function copyXyzTileUrl(annotationUrl: string) {

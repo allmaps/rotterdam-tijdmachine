@@ -1,0 +1,283 @@
+import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseAnnotation } from '@allmaps/annotation';
+import { load as parseYaml } from 'js-yaml';
+import type { GeoreferencedMap } from '@allmaps/annotation';
+
+const DEFAULT_CONFIG_FILE = 'config.yml';
+const DEFAULT_COLLECTION_FILE = 'collection.yml';
+const GENERATED_FILE = 'src/lib/generated/maps.json';
+const CACHE_DIRECTORY = '.cache/annotations';
+const FETCH_ATTEMPTS = 3;
+const FETCH_TIMEOUT_MS = 20_000;
+const FETCH_CONCURRENCY = 6;
+
+type GenerateAnnotationsOptions = {
+	root?: string;
+	configFile?: string;
+};
+
+type AppConfig = {
+	collection?: string;
+};
+
+type MapRecord = {
+	annotation?: string;
+};
+
+type GeneratedAnnotationEntry = {
+	annotation: string;
+	maps: GeoreferencedMap[];
+};
+
+type GeneratedAnnotations = {
+	config: string;
+	collection: string;
+	annotations: GeneratedAnnotationEntry[];
+};
+
+type GenerateAnnotationsResult = {
+	generatedPath: string;
+	watchedFiles: string[];
+	annotationCount: number;
+	mapCount: number;
+};
+
+export async function generateAnnotations(
+	options: GenerateAnnotationsOptions = {}
+): Promise<GenerateAnnotationsResult> {
+	const root = options.root ? path.resolve(options.root) : process.cwd();
+	const configFileName = normalizeContentFileName(
+		options.configFile ?? process.env.CONFIG,
+		DEFAULT_CONFIG_FILE
+	);
+	const configPath = path.join(root, configFileName);
+	const config = (await readYamlFile(configPath)) as AppConfig;
+	const collectionFileName = resolveReferencedContentFile(
+		config.collection,
+		DEFAULT_COLLECTION_FILE,
+		configFileName
+	);
+	const collectionPath = path.join(root, collectionFileName);
+	const collection = (await readYamlFile(collectionPath)) as MapRecord[];
+
+	if (!Array.isArray(collection)) {
+		throw new Error(`${collectionFileName} must contain an array of map records`);
+	}
+
+	const annotationUrls = [
+		...new Set(collection.map((map) => String(map?.annotation ?? '').trim()).filter(Boolean))
+	];
+	const entries = await mapWithConcurrency(annotationUrls, FETCH_CONCURRENCY, async (annotation) =>
+		generateAnnotationEntry(annotation, root)
+	);
+	const generatedPath = path.join(root, GENERATED_FILE);
+	const output: GeneratedAnnotations = {
+		config: configFileName,
+		collection: collectionFileName,
+		annotations: entries
+	};
+
+	await mkdir(path.dirname(generatedPath), { recursive: true });
+	await writeFile(generatedPath, `${JSON.stringify(output)}\n`);
+
+	const watchedFiles = [
+		configPath,
+		collectionPath,
+		...annotationUrls
+			.map((url) => getLocalAnnotationPath(url, root))
+			.filter((filePath): filePath is string => Boolean(filePath))
+	];
+	const mapCount = entries.reduce((total, entry) => total + entry.maps.length, 0);
+
+	console.log(
+		`Generated ${path.relative(root, generatedPath)} with ${mapCount} georeferenced maps from ${entries.length} annotations`
+	);
+
+	return {
+		generatedPath,
+		watchedFiles,
+		annotationCount: entries.length,
+		mapCount
+	};
+}
+
+async function generateAnnotationEntry(
+	annotation: string,
+	root: string
+): Promise<GeneratedAnnotationEntry> {
+	const data = await loadAnnotation(annotation, root);
+	const maps = parseAnnotation(data);
+
+	return {
+		annotation,
+		maps
+	};
+}
+
+async function loadAnnotation(annotation: string, root: string): Promise<unknown> {
+	const localPath = getLocalAnnotationPath(annotation, root);
+	if (localPath) {
+		return JSON.parse(await readFile(localPath, 'utf8'));
+	}
+
+	if (!isAbsoluteUrl(annotation)) {
+		throw new Error(
+			`Annotation "${annotation}" does not exist in static/. Use a valid static path or an absolute URL.`
+		);
+	}
+
+	return loadRemoteAnnotation(annotation, root);
+}
+
+async function loadRemoteAnnotation(url: string, root: string): Promise<unknown> {
+	const cachePath = getCachePath(url, root);
+
+	try {
+		const data = await fetchJsonWithRetry(url);
+		await mkdir(path.dirname(cachePath), { recursive: true });
+		await writeFile(cachePath, JSON.stringify(data));
+		return data;
+	} catch (error) {
+		if (existsSync(cachePath)) {
+			console.warn(`Fetch failed for ${url}; using cached annotation`);
+			return JSON.parse(await readFile(cachePath, 'utf8'));
+		}
+
+		throw error;
+	}
+}
+
+async function fetchJsonWithRetry(url: string): Promise<unknown> {
+	let lastError: unknown;
+
+	for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
+		try {
+			return await fetchJson(url);
+		} catch (error) {
+			lastError = error;
+			if (attempt < FETCH_ATTEMPTS) {
+				await sleep(300 * attempt);
+			}
+		}
+	}
+
+	throw lastError instanceof Error ? lastError : new Error(`Annotation request failed for ${url}`);
+}
+
+async function fetchJson(url: string): Promise<unknown> {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+	try {
+		const response = await fetch(url, {
+			headers: {
+				accept: 'application/json'
+			},
+			signal: controller.signal
+		});
+
+		if (!response.ok) {
+			throw new Error(`Annotation request failed with status ${response.status} for ${url}`);
+		}
+
+		return response.json();
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+function getLocalAnnotationPath(annotation: string, root: string): string | undefined {
+	if (isAbsoluteUrl(annotation)) return undefined;
+
+	const publicPath = normalizePublicPath(annotation);
+	if (!publicPath) return undefined;
+
+	const localPath = path.join(root, 'static', publicPath);
+	return existsSync(localPath) ? localPath : undefined;
+}
+
+function getCachePath(url: string, root: string): string {
+	const hash = createHash('sha256').update(url).digest('hex');
+	return path.join(root, CACHE_DIRECTORY, `${hash}.json`);
+}
+
+async function readYamlFile(filePath: string): Promise<unknown> {
+	return parseYaml(await readFile(filePath, 'utf8'));
+}
+
+function normalizeContentFileName(fileName: string | undefined, fallback: string): string {
+	const normalized = String(fileName || fallback)
+		.trim()
+		.replace(/\\/g, '/')
+		.replace(/^\.\//, '')
+		.replace(/^\/+/, '');
+
+	if (!normalized || normalized.startsWith('../')) {
+		throw new Error(`Content file paths must stay inside the project: ${normalized}`);
+	}
+
+	return normalized;
+}
+
+function resolveReferencedContentFile(
+	fileName: string | undefined,
+	fallback: string,
+	referenceFileName: string
+): string {
+	const normalized = normalizeContentFileName(fileName, fallback);
+	if (!fileName?.trim() || normalized.includes('/')) return normalized;
+
+	const referenceDirectory = path.posix.dirname(referenceFileName);
+	return referenceDirectory === '.' ? normalized : `${referenceDirectory}/${normalized}`;
+}
+
+function normalizePublicPath(value: string): string {
+	return value
+		.trim()
+		.replace(/\\/g, '/')
+		.replace(/^\.\//, '')
+		.replace(/^\/+/, '')
+		.replace(/^static\//, '');
+}
+
+function isAbsoluteUrl(value: string): boolean {
+	const url = value.trim();
+	return /^[a-z][a-z\d+.-]*:/i.test(url) || url.startsWith('//');
+}
+
+async function mapWithConcurrency<T, U>(
+	values: T[],
+	concurrency: number,
+	callback: (value: T, index: number) => Promise<U>
+): Promise<U[]> {
+	const results: U[] = new Array(values.length);
+	let index = 0;
+
+	async function worker(): Promise<void> {
+		while (index < values.length) {
+			const currentIndex = index;
+			index += 1;
+			results[currentIndex] = await callback(values[currentIndex], currentIndex);
+		}
+	}
+
+	await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, () => worker()));
+
+	return results;
+}
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const currentFile = fileURLToPath(import.meta.url);
+if (process.argv[1] === currentFile) {
+	generateAnnotations().catch((error) => {
+		console.error(error);
+		process.exitCode = 1;
+	});
+}

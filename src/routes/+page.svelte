@@ -7,6 +7,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { comparison, mapView, viewState } from '$lib/app-state.svelte.js';
 	import { getMapStartYear, mapIncludesYear } from '$lib/map-years';
+	import { loadWarpedMapData } from '$lib/warped-map-list';
 	import { LoaderCircle } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import type {
@@ -60,6 +61,7 @@
 	let geocoderBounds = $state<GeocoderBounds>();
 	let compareStacked = $state(false);
 	let panesReady = $state(false);
+	let panesError = $state<string>();
 	let mapKeyboardCommand = $state<MapKeyboardCommand>();
 	let mapToolbarCommand = $state<MapToolbarCommand>();
 	let keyboardCommandId = 0;
@@ -299,17 +301,33 @@
 
 	onMount(() => {
 		const compareStackQuery = window.matchMedia('(max-width: 767px)');
+		let cancelled = false;
 
 		function syncCompareStacked(event: MediaQueryList | MediaQueryListEvent) {
 			compareStacked = event.matches;
 		}
 
-		syncCompareStacked(compareStackQuery);
-		applyInitialParams(new URLSearchParams(window.location.search));
-		panesReady = true;
+		async function initializePanes() {
+			syncCompareStacked(compareStackQuery);
+			applyInitialParams(new URLSearchParams(window.location.search));
+			try {
+				await loadWarpedMapData();
+				if (!cancelled) {
+					panesReady = true;
+				}
+			} catch (error) {
+				console.error(error);
+				if (!cancelled) {
+					panesError = 'Kaartlagen konden niet worden geladen.';
+				}
+			}
+		}
+
+		initializePanes();
 		compareStackQuery.addEventListener('change', syncCompareStacked);
 
 		return () => {
+			cancelled = true;
 			compareStackQuery.removeEventListener('change', syncCompareStacked);
 		};
 	});
@@ -375,9 +393,13 @@
 			{/if}
 		{:else}
 			<div class="grid min-h-0 flex-1 place-items-center">
-				<div role="status" aria-label="Loading map">
-					<LoaderCircle class="h-8 w-8 animate-spin text-brand-main" />
-				</div>
+				{#if panesError}
+					<p class="px-6 text-center text-sm font-semibold text-gray-700">{panesError}</p>
+				{:else}
+					<div role="status" aria-label="Loading map">
+						<LoaderCircle class="h-8 w-8 animate-spin text-brand-main" />
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

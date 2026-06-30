@@ -1,44 +1,62 @@
-import { base } from '$app/paths';
 import { WarpedMapList } from '@allmaps/render';
-import { parseAnnotation } from '@allmaps/annotation';
-import { resolvePublicAssetUrl } from '$lib/asset-urls';
-import { collection } from '$lib/content';
+import annotationsUrl from '$lib/generated/maps.json?url';
 
+import type { GeoreferencedMap } from '@allmaps/annotation';
 import type { WebGL2WarpedMap } from '@allmaps/render/webgl2';
+
+type GeneratedAnnotationEntry = {
+	annotation: string;
+	maps: GeoreferencedMap[];
+};
+
+type GeneratedAnnotations = {
+	annotations: GeneratedAnnotationEntry[];
+};
 
 export const mapIdsByAnnotation = new Map<string, Set<string>>();
 export const annotationsByMapId = new Map<string, string>();
 
-const annotationUrls = collection.map((map) => map.annotation);
+let georeferencedMaps: GeoreferencedMap[] = [];
+let loaded = false;
+let loadPromise: Promise<void> | undefined;
 
-const georeferencedMaps = await Promise.all(
-	annotationUrls.map(async (url) => {
-		try {
-			const data = await loadAnnotation(url);
-			const parsedAnnotations = parseAnnotation(data);
-			const ids = parsedAnnotations.flatMap(({ id }) => (id ? [id] : []));
-			mapIdsByAnnotation.set(url, new Set(ids));
-			ids.forEach((id) => annotationsByMapId.set(id, url));
-			return parsedAnnotations;
-		} catch {
-			console.warn('Fetch failed for', url);
-			return [];
-		}
-	})
-);
+export function loadWarpedMapData() {
+	loadPromise ??= loadGeneratedAnnotations();
+	return loadPromise;
+}
+
+export function isWarpedMapDataLoaded() {
+	return loaded;
+}
 
 export const getWarpedMapList = () => {
+	if (!loaded) {
+		throw new Error('Warped map data has not been loaded yet');
+	}
+
 	const warpedMapList = new WarpedMapList<WebGL2WarpedMap>();
-	warpedMapList.addGeoreferencedMaps(georeferencedMaps.flat());
+	warpedMapList.addGeoreferencedMaps(georeferencedMaps);
 	return warpedMapList;
 };
 
-async function loadAnnotation(url: string) {
-	const fetchUrl = resolvePublicAssetUrl(url, base);
-	const resp = await fetch(fetchUrl);
-	if (!resp.ok) {
-		throw new Error(`Annotation request failed with status ${resp.status}`);
+async function loadGeneratedAnnotations() {
+	const response = await fetch(annotationsUrl);
+	if (!response.ok) {
+		throw new Error(`Generated annotations request failed with status ${response.status}`);
 	}
 
-	return resp.json();
+	const data = (await response.json()) as GeneratedAnnotations;
+	const entries = data.annotations ?? [];
+
+	mapIdsByAnnotation.clear();
+	annotationsByMapId.clear();
+
+	georeferencedMaps = entries.flatMap((entry) => {
+		const ids = entry.maps.flatMap(({ id }) => (id ? [id] : []));
+		mapIdsByAnnotation.set(entry.annotation, new Set(ids));
+		ids.forEach((id) => annotationsByMapId.set(id, entry.annotation));
+		return entry.maps;
+	});
+
+	loaded = true;
 }

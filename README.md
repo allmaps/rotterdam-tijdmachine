@@ -222,7 +222,7 @@ Multiple maps can share the same year. The app will show previous/next buttons a
 
 ### Georeference Annotations
 
-The app expects each map to have valid Georeference Annotations. The helper in `src/lib/warped-map-list.ts` fetches these annotations, builds a `WarpedMapList`, and uses that list for:
+The app expects each map to have valid Georeference Annotations. During development and production builds, `scripts/generate-annotations.ts` reads the configured collection, fetches or reads every annotation, parses the annotations with Allmaps, and writes a generated JSON asset to `src/lib/generated/maps.json`. The app then loads that local generated asset and builds a `WarpedMapList` from it for:
 
 - displaying historical map layers
 - the "in view" filter
@@ -242,6 +242,12 @@ annotation: annotations/rotterdam-1897.json
 ```
 
 Relative annotation paths are resolved with the SvelteKit base path, so they continue to work when the app is deployed under a subpath such as `/rotterdam-tijdmachine`. Links generated for Allmaps Viewer and copied XYZ tile URLs use the full public URL for bundled annotations, for example `https://example.org/time-machine/annotations/rotterdam-1897.json`.
+
+Remote annotations are cached in `.cache/annotations` after a successful fetch, so later builds can fall back to cached data if a remote annotation service is temporarily unavailable. The generated JSON and cache directory are ignored by Git. To refresh the generated annotation asset manually, run:
+
+```bash
+npm run generate:annotations
+```
 
 ### Basemap and search bounds
 

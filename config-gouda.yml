@@ -1,0 +1,245 @@
+site:
+  name: Goudse Kaarten Kabinet
+  url: https://www.goudatijdmachine.nl/kaarten-kabinet/
+  description: Verken historische kaarten van Gouda door de tijd en vergelijk kaartlagen met de huidige stad.
+  locale: nl_NL
+  themeColor: "#3891b1"
+
+header:
+  search: Zoeken
+  compare: Vergelijken
+  closeCompare: Sluiten
+  compareMode: Vergelijkmodus
+  about: Over
+  share: Delen
+
+map:
+  defaultYear: 1710
+  initialView:
+    center: [4.7068, 52.0104]
+    zoom: 14.5
+    bearing: 0
+  keyboard:
+    panPixels: 100
+    bearingStep: 13
+
+collection: collection-gouda.yml
+
+theme:
+  color: "#3891b1"
+  fonts:
+    families:
+      - name: Bolder
+        faces:
+          - weight: 300
+            style: normal
+            files:
+              - /fonts/Bolder-Light.woff2
+              - /fonts/Bolder-Light.woff
+          - weight: 400
+            style: normal
+            files:
+              - /fonts/Bolder-Regular.woff2
+              - /fonts/Bolder-Regular.woff
+          - weight: 400
+            style: italic
+            files:
+              - /fonts/Bolder-RegularItalic.woff2
+              - /fonts/Bolder-RegularItalic.woff
+          - weight: 700
+            style: normal
+            files:
+              - /fonts/Bolder-Bold.woff2
+              - /fonts/Bolder-Bold.woff
+      - name: Bolder Heading
+        faces:
+          - weight: 700
+            style: normal
+            files:
+              - /fonts/Bolder-Heading.woff2
+              - /fonts/Bolder-Heading.woff
+    roles:
+      body: Noto Sans
+      accent: Bolder
+      heading: [Bolder Heading, Bolder]
+      display: [Bolder Heading, Bolder]
+
+basemap:
+  protomapsApiKey: 8a4b1d9342ca6e89
+
+slider:
+  scaleInterval: 25
+  play: 5
+
+tour:
+  enabled: true
+  closeLabel: Sluit tour
+  nextLabel: Volgende
+  previousLabel: Vorige
+  doneLabel: Klaar
+  progressText: "{{current}} van {{total}}"
+  storageKey: rotterdam-tijdmachine-tour-v1
+  steps:
+    - target: time-slider
+      title: Reis door de tijd
+      description: Sleep of klik op de verticale slider om naar een ander jaar te gaan.
+      side: right
+      align: center
+    - target: layers
+      title: Kies kaartlagen
+      description: Open de kaartlagen om kaarten te zoeken, te filteren en favorieten te bewaren.
+      side: top
+      align: center
+    - target: map-toolbar
+      title: Verfijn de kaartlaag
+      description: Gebruik de knoppen om te zoomen, de historische kaart te draaien, te focussen of de transparantie aan te passen.
+      side: left
+      align: start
+    - target: search
+      title: Zoek een plek
+      description: Zoek een adres in Rotterdam of toon je eigen locatie op de kaart.
+      side: bottom
+      align: start
+    - target: compare
+      title: Vergelijk twee kaarten
+      description: Zet de vergelijkmodus aan om twee kaarten uit verschillende jaren naast elkaar te bekijken.
+      side: bottom
+      align: start
+
+about:
+  title: Over Goudse Kaarten Kabinet
+  closeLabel: Sluit over
+  paragraphs:
+    - De Gouda Tijdmachine verzamelt ook kaarten van Gouda om de stadsgeschiedenis te ontdekken. Vanaf de zestiende eeuw zijn er kaarten beschikbaar van deze havenstad.
+    - De historische Goudse kaarten zijn afkomstig uit de collectie van het Streekarchief Midden-Holland en andere erfgoedinstellingen. Vrijwilligers van de Gouda Tijdmachine hebben deze kaarten gegeorefereerd met behulp van Allmaps, zodat ze in de tijdmachine kunnen worden bekeken.
+    - Deze cultuurhistorische tijdreis geeft inzicht in de keuzes die hebben geleid tot het Gouda van nu, en kan inspireren om historische kennis opnieuw te benutten.
+  standards:
+    title: Kaarten verbinden
+    paragraphs:
+      - De kaarten in deze tijdmachine komen uit collecties van verschillende instellingen. Dankzij de open standaard IIIF kunnen kaartbeelden en metadata op een uniforme manier worden gepubliceerd, opgehaald en hergebruikt.
+      - Met de open-source tooling van Allmaps worden historische kaartbeelden gekoppeld aan geografische coördinaten. Daardoor kunnen kaarten uit verschillende bronnen als lagen op dezelfde moderne kaart worden gelegd, vergeleken en gedeeld.
+    links:
+      - label: IIIF
+        url: https://iiif.io/
+      - label: Allmaps
+        url: https://allmaps.org/
+  institutionsTitle: Kaartbronnen
+  source:
+    title: Open source
+    description: Rotterdam Tijdmachine is een open-source project. De broncode is beschikbaar op GitHub.
+    linkLabel: Bekijk de code op GitHub
+    url: https://github.com/allmaps/rotterdam-tijdmachine
+  shortcutsTitle: Sneltoetsen
+  shortcuts:
+    - keys: ["⌘", K, "/", Ctrl, K]
+      description: Kaartlagen openen
+    - keys: ["↑", "↓"]
+      description: Naar het volgende of vorige beschikbare kaartjaar
+    - keys: ["←", "→"]
+      description: Door kaarten van hetzelfde jaar bladeren
+    - keys: ["+", "=", "-"]
+      description: In- en uitzoomen
+    - keys: [Shift, "←", "↑", "↓", "→"]
+      description: Kaartbeeld verschuiven
+    - keys: [F]
+      description: Filter op kaarten in beeld aan- of uitzetten
+    - keys: [R]
+      description: Kaartoriëntatie volgen aan- of uitzetten
+    - keys: [Z]
+      description: Kaartlaagfocus volgen aan- of uitzetten
+    - keys: [Spatie]
+      wide: true
+      description: Historische kaartlagen tijdelijk verbergen
+
+share:
+  title: Deel jouw tijdreis
+  closeLabel: Sluit delen
+  description: Kies of je de algemene pagina of de huidige kaartuitsnede wilt delen.
+  simpleLink: Eenvoudige link
+  viewLink: Huidige uitsnede
+  copy: Kopieer
+  copied: Gekopieerd
+
+search:
+  buttonLabel: Zoeken
+  modalLabel: Zoek locatie
+  submitLabel: Zoek
+  closeLabel: Sluit zoeken
+  placeholder: Zoek locatie...
+  useLocation: Gebruik mijn locatie
+  locating: Locatie bepalen...
+  loading: Aan het zoeken...
+  noResults: Geen resultaten gevonden.
+  minimumCharacters: Gebruik minimaal 3 tekens.
+  notReady: Zoeken is nog niet klaar.
+  unavailable: Zoeken is tijdelijk niet beschikbaar.
+  locationUnsupported: Je browser ondersteunt locatiebepaling niet.
+  locationDenied: Locatiebepaling is geweigerd.
+  locationTimeout: Locatiebepaling duurde te lang.
+  locationUnavailable: Je locatie kon niet worden bepaald.
+  countryCodes: nl
+  minLength: 3
+  limit: 8
+  debounceMs: 350
+  minRequestIntervalMs: 1100
+  cacheLimit: 100
+  attribution:
+    prefix: Zoeken via
+    provider: Nominatim
+    providerUrl: https://nominatim.openstreetmap.org/
+    copyright: OpenStreetMap-bijdragers
+    copyrightUrl: https://www.openstreetmap.org/copyright
+
+layers:
+  title: Kaartlagen
+  openLabel: Open kaartlagen
+  closeLabel: Sluit kaartlagen
+  searchPlaceholder: Zoek kaart...
+  current: Huidig
+  favorite: Favorieten
+  inView: Kaartuitsnede
+  noResults: Geen kaarten gevonden.
+  found: gevonden
+  yearPrefix: voor
+  resultSingular: kaart
+  resultPlural: kaarten
+  leftPane: Linker kaart
+  rightPane: Rechter kaart
+  previousMap: Vorige kaart
+  nextMap: Volgende kaart
+  mapPosition: Kaart
+  selectMap: Selecteer
+  visibleOnMap: Zichtbaar op de kaart
+  addFavorite: Voeg toe aan favorieten
+  removeFavorite: Verwijder uit favorieten
+  viewItemAt: Bekijk item bij
+  openInAllmapsViewer: Open in Allmaps Viewer
+  copyXyzTileUrl: Kopieer XYZ tile URL
+  copiedXyzTileUrl: XYZ tile URL gekopieerd
+  basemap: Achtergrondkaart
+  protomaps: Protomaps
+  openStreetMap: © OpenStreetMap
+
+controls:
+  groupLabel: Kaartnavigatie
+  zoomIn: Inzoomen
+  zoomOut: Uitzoomen
+  showAllYears: Toon alle jaren
+  filterInView: Filter op kaarten in beeld
+  noMapsInView: Geen kaarten in beeld
+  disableOrientation: Kaartoriëntatie uitschakelen
+  followOrientation: Kaartoriëntatie volgen
+  disableFocus: Kaartlaagfocus uitschakelen
+  followFocus: Kaartlaagfocus volgen
+  opacity: Transparantie
+  adjustOpacity: Transparantie aanpassen
+  layerOpacity: Transparantie kaartlaag
+
+mapWarnings:
+  label: Waarschuwing kaartlaag
+  outsideTitle: Kaartlaag buiten beeld
+  partialTitle: Kaartlaag deels zichtbaar
+  outsideDescription: De geselecteerde kaartlaag ligt niet in de huidige kaartuitsnede.
+  partialDescription: De geselecteerde kaartlaag is maar gedeeltelijk zichtbaar in de huidige kaartuitsnede.
+  dismiss: Laat zo
+  zoomToLayer: Zoom naar kaartlaag

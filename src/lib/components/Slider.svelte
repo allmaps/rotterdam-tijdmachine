@@ -407,8 +407,6 @@
 		dragStartY = event.clientY;
 		dragStartScrollTop = container.scrollTop;
 		hasDraggedScale = false;
-		isDraggingScale = true;
-		container.setPointerCapture(event.pointerId);
 	}
 
 	function handlePickerPointerMove(event: PointerEvent) {
@@ -417,6 +415,11 @@
 		const offsetY = event.clientY - dragStartY;
 		if (Math.abs(offsetY) > dragClickThreshold) {
 			hasDraggedScale = true;
+			isDraggingScale = true;
+
+			if (!container.hasPointerCapture(event.pointerId)) {
+				container.setPointerCapture(event.pointerId);
+			}
 		}
 
 		if (!hasDraggedScale) return;

@@ -39,6 +39,7 @@
 	let container = $state<HTMLDivElement>();
 	let containerHeight = $state(0);
 	let isInteracting = $state(false);
+	let previewYear = $state<number | undefined>();
 	let isProgrammaticScroll = false;
 	let hasInitializedScroll = false;
 	let scrollFrame: number | undefined;
@@ -70,6 +71,7 @@
 	let showAvailabilityRail = $derived(
 		showMapYearTicks && !showOnlyAvailableYears && mapYearAvailabilitySegments.length > 0
 	);
+	let displayedYear = $derived(previewYear ?? selectedYear);
 
 	onMount(() => {
 		updateContainerHeight();
@@ -172,12 +174,14 @@
 			selectedYear;
 
 		if (nextYear !== undefined) {
+			previewYear = getCenteredYear();
 			selectedYear = nextYear;
 		}
 	}
 
 	function selectYear(year: number) {
 		isInteracting = false;
+		previewYear = getCenteredYear();
 		selectedYear =
 			(snapToAvailableYear || showOnlyAvailableYears) && selectableYears.length > 0
 				? closestYear(year, selectableYears)
@@ -265,16 +269,17 @@
 		);
 	}
 
-	function updateSelectedYearFromScroll() {
+	function updatePreviewYearFromScroll() {
 		const year = getCenteredYear();
 
-		if (year !== selectedYear) {
-			selectedYear = year;
+		if (year !== previewYear) {
+			previewYear = year;
 		}
 	}
 
 	function handlePickerInteraction() {
 		isInteracting = true;
+		previewYear = getCenteredYear();
 		isProgrammaticScroll = false;
 		clearProgrammaticScrollTimeout();
 	}
@@ -284,9 +289,7 @@
 		scrollFrame = requestAnimationFrame(() => {
 			scrollFrame = undefined;
 
-			if (!isProgrammaticScroll) {
-				updateSelectedYearFromScroll();
-			}
+			updatePreviewYearFromScroll();
 		});
 
 		clearScrollSettleTimeout();
@@ -307,7 +310,10 @@
 		}
 
 		if (!isProgrammaticScroll) {
+			previewYear = nextYear === centeredYear ? undefined : centeredYear;
 			scrollToYear(nextYear, 'smooth');
+		} else {
+			previewYear = undefined;
 		}
 	}
 
@@ -341,13 +347,13 @@
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			event.stopImmediatePropagation();
-			selectRelativeYear(1);
+			selectRelativeYear(-1);
 		}
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			event.stopImmediatePropagation();
-			selectRelativeYear(-1);
+			selectRelativeYear(1);
 		}
 	}
 </script>
@@ -399,17 +405,17 @@
 					<button
 						type="button"
 						role="option"
-						aria-selected={year === selectedYear}
+						aria-selected={year === displayedYear}
 						aria-label={`${year}${availableYearSet.has(year) ? ', map available' : ''}`}
-						tabindex={year === selectedYear ? 0 : -1}
+						tabindex={year === displayedYear ? 0 : -1}
 						onclick={() => selectYear(year)}
 						class="year-picker-row relative z-10 flex w-full cursor-pointer items-center justify-center rounded-sm px-3 text-center leading-none transition {year ===
-						selectedYear
+						displayedYear
 							? 'text-white'
 							: availableYearSet.has(year)
 								? 'text-gray-900'
 								: 'text-gray-500'}"
-						class:year-picker-selected={year === selectedYear}
+						class:year-picker-selected={year === displayedYear}
 						class:year-picker-available={availableYearSet.has(year)}
 						class:year-picker-scale-year={!showOnlyAvailableYears && isScaleYear(year)}
 						class:year-picker-century={!showOnlyAvailableYears && isCenturyYear(year)}

@@ -609,7 +609,7 @@
 		<div
 			data-tour="layers"
 			data-map-layers-panel
-			class="relative z-30 w-full max-w-xl overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg {hasMultipleMaps
+			class="relative z-30 w-full max-w-lg overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-900 shadow-lg {hasMultipleMaps
 				? 'min-h-16'
 				: 'min-h-14'}"
 		>

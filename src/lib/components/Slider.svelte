@@ -360,7 +360,7 @@
 
 <svelte:window onkeydowncapture={handleGlobalKeydown} />
 
-<aside class="time-slider z-20 flex h-full flex-none flex-col pb-20 font-bolder text-gray-800">
+<aside class="time-slider z-20 flex h-full flex-none flex-col font-bolder text-gray-800">
 	<div class="year-picker-shell relative min-h-0 w-28 flex-1">
 		<div
 			data-time-slider-surface
@@ -431,6 +431,12 @@
 </aside>
 
 <style>
+	.time-slider {
+		padding-bottom: 5rem;
+		transition: padding-bottom 240ms ease;
+		will-change: padding-bottom;
+	}
+
 	.year-picker-scroll {
 		scroll-snap-type: y mandatory;
 		scrollbar-width: none;
@@ -449,6 +455,10 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0;
+		transition:
+			color 160ms ease,
+			font-size 160ms ease,
+			text-shadow 160ms ease;
 	}
 
 	.year-picker-row.year-picker-available {
@@ -473,7 +483,15 @@
 		text-shadow: 0 1px 1px rgb(0 0 0 / 0.18);
 	}
 
-	.year-picker-surface,
+	.year-picker-surface {
+		background-color: rgb(255 255 255 / 0.8);
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 240ms ease,
+			visibility 0s linear 240ms;
+	}
+
 	.year-picker-availability-rail {
 		display: none;
 	}
@@ -484,12 +502,21 @@
 		}
 
 		.year-picker-surface {
-			display: block;
-			background-color: rgb(255 255 255 / 0.8);
+			opacity: 1;
+			visibility: visible;
+			transition: opacity 240ms ease;
 		}
 
 		.year-picker-availability-rail {
 			display: block;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.time-slider,
+		.year-picker-surface,
+		.year-picker-row {
+			transition: none;
 		}
 	}
 </style>

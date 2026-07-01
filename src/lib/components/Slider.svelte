@@ -13,6 +13,7 @@
 	const yearRowHeight = 40;
 	const scrollSettleDelay = 140;
 	const snapScrollDuration = 640;
+	const keyboardScrollDuration = 260;
 	const programmaticScrollReleaseDelay = scrollSettleDelay + 40;
 	const dragClickThreshold = 4;
 
@@ -51,8 +52,8 @@
 	let dragStartScrollTop = 0;
 	let hasDraggedScale = false;
 	let suppressNextYearClick = false;
-	let keyboardTargetYear: number | undefined;
-	let keyboardNavigationId = 0;
+	let pendingTargetYear: number | undefined;
+	let pendingSelectionId = 0;
 	let scrollAnimationFrame: number | undefined;
 	let scrollSettleTimeout: ReturnType<typeof setTimeout> | undefined;
 	let programmaticScrollTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -188,21 +189,11 @@
 	}
 
 	function selectRelativeYear(direction: -1 | 1) {
-		const currentYear = keyboardTargetYear ?? selectedYear;
+		const currentYear = pendingTargetYear ?? selectedYear;
 		const nextYear = getRelativeYear(currentYear, direction);
 
 		if (nextYear !== undefined && nextYear !== currentYear) {
-			const navigationId = ++keyboardNavigationId;
-
-			keyboardTargetYear = nextYear;
-			isInteracting = true;
-			scrollToYear(nextYear, 'smooth', () => {
-				if (navigationId !== keyboardNavigationId || keyboardTargetYear !== nextYear) return;
-
-				selectedYear = nextYear;
-				keyboardTargetYear = undefined;
-				isInteracting = false;
-			});
+			selectYearAfterScroll(nextYear, keyboardScrollDuration);
 		}
 	}
 
@@ -222,14 +213,31 @@
 			return;
 		}
 
-		keyboardTargetYear = undefined;
-		keyboardNavigationId += 1;
-		isInteracting = false;
-		selectedYear =
+		const targetYear =
 			(snapToAvailableYear || showOnlyAvailableYears) && selectableYears.length > 0
 				? closestYear(year, selectableYears)
 				: year;
-		scrollToYear(selectedYear, 'smooth');
+
+		selectYearAfterScroll(targetYear, snapScrollDuration);
+	}
+
+	function selectYearAfterScroll(year: number, duration: number) {
+		const selectionId = ++pendingSelectionId;
+
+		pendingTargetYear = year;
+		isInteracting = true;
+		scrollToYear(
+			year,
+			'smooth',
+			() => {
+				if (selectionId !== pendingSelectionId || pendingTargetYear !== year) return;
+
+				selectedYear = year;
+				pendingTargetYear = undefined;
+				isInteracting = false;
+			},
+			duration
+		);
 	}
 
 	function selectSettledYear(year: number) {
@@ -303,7 +311,12 @@
 		return 1 - Math.pow(1 - progress, 3);
 	}
 
-	function scrollToYear(year: number, behavior: ScrollMode, onComplete?: () => void) {
+	function scrollToYear(
+		year: number,
+		behavior: ScrollMode,
+		onComplete?: () => void,
+		duration = snapScrollDuration
+	) {
 		if (!container || pickerYears.length === 0) return;
 
 		const targetYear = getClosestPickerYear(year);
@@ -330,10 +343,14 @@
 			return;
 		}
 
-		animateScrollTo(top, onComplete);
+		animateScrollTo(top, onComplete, duration);
 	}
 
-	function animateScrollTo(targetTop: number, onComplete?: () => void) {
+	function animateScrollTo(
+		targetTop: number,
+		onComplete?: () => void,
+		duration = snapScrollDuration
+	) {
 		if (!container) return;
 
 		const startTop = container.scrollTop;
@@ -347,7 +364,7 @@
 				return;
 			}
 
-			const progress = Math.min((timestamp - startTime) / snapScrollDuration, 1);
+			const progress = Math.min((timestamp - startTime) / duration, 1);
 
 			container.scrollTop = startTop + distance * easeOutCubic(progress);
 
@@ -373,8 +390,8 @@
 	}
 
 	function handlePickerInteraction() {
-		keyboardTargetYear = undefined;
-		keyboardNavigationId += 1;
+		pendingTargetYear = undefined;
+		pendingSelectionId += 1;
 		isInteracting = true;
 		isProgrammaticScroll = false;
 		clearScrollAnimation();

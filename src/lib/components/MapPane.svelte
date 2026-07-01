@@ -30,6 +30,7 @@
 		layersId = `map-layers-${navPosition}`,
 		bordered = false,
 		showMapYearTicks = true,
+		showOnlyAvailableYears = config.slider.showOnlyAvailableYears ?? false,
 		enableFlyTo = false,
 		enableLocationMarker = false,
 		enableLayersShortcut = false,
@@ -50,6 +51,7 @@
 		layersId?: string;
 		bordered?: boolean;
 		showMapYearTicks?: boolean;
+		showOnlyAvailableYears?: boolean;
 		enableFlyTo?: boolean;
 		enableLocationMarker?: boolean;
 		enableLayersShortcut?: boolean;
@@ -80,6 +82,7 @@
 			scaleInterval={config.slider.scaleInterval}
 			{navPosition}
 			{showMapYearTicks}
+			{showOnlyAvailableYears}
 			{annotationsInView}
 			enableKeyboardShortcut={enableLayersShortcut}
 		/>

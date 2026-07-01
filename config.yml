@@ -59,6 +59,7 @@ basemap:
 
 slider:
   scaleInterval: 25
+  showOnlyAvailableYears: true
 
 header:
   search: Zoeken

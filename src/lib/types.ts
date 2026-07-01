@@ -80,6 +80,7 @@ export type AppConfig = {
 	};
 	slider: {
 		scaleInterval: number;
+		showOnlyAvailableYears?: boolean;
 	};
 	header: {
 		search: string;

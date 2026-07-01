@@ -42,10 +42,8 @@
 	let container = $state<HTMLDivElement>();
 	let containerHeight = $state(0);
 	let isInteracting = $state(false);
-	let previewYear = $state<number | undefined>();
 	let isProgrammaticScroll = false;
 	let hasInitializedScroll = false;
-	let scrollFrame: number | undefined;
 	let scrollAnimationFrame: number | undefined;
 	let scrollSettleTimeout: ReturnType<typeof setTimeout> | undefined;
 	let programmaticScrollTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -75,7 +73,7 @@
 	let showAvailabilityRail = $derived(
 		showMapYearTicks && !showOnlyAvailableYears && mapYearAvailabilitySegments.length > 0
 	);
-	let displayedYear = $derived(previewYear ?? selectedYear);
+	let visuallySelectedYear = $derived(isInteracting ? undefined : selectedYear);
 
 	onMount(() => {
 		updateContainerHeight();
@@ -87,7 +85,6 @@
 
 		return () => {
 			resizeObserver.disconnect();
-			clearScrollFrame();
 			clearScrollAnimation();
 			clearScrollSettleTimeout();
 			clearProgrammaticScrollTimeout();
@@ -179,14 +176,12 @@
 			selectedYear;
 
 		if (nextYear !== undefined) {
-			previewYear = getCenteredYear();
 			selectedYear = nextYear;
 		}
 	}
 
 	function selectYear(year: number) {
 		isInteracting = false;
-		previewYear = getCenteredYear();
 		selectedYear =
 			(snapToAvailableYear || showOnlyAvailableYears) && selectableYears.length > 0
 				? closestYear(year, selectableYears)
@@ -322,30 +317,14 @@
 		}, programmaticScrollReleaseDelay);
 	}
 
-	function updatePreviewYearFromScroll() {
-		const year = getCenteredYear();
-
-		if (year !== previewYear) {
-			previewYear = year;
-		}
-	}
-
 	function handlePickerInteraction() {
 		isInteracting = true;
-		previewYear = getCenteredYear();
 		isProgrammaticScroll = false;
 		clearScrollAnimation();
 		clearProgrammaticScrollTimeout();
 	}
 
 	function handleScroll() {
-		clearScrollFrame();
-		scrollFrame = requestAnimationFrame(() => {
-			scrollFrame = undefined;
-
-			updatePreviewYearFromScroll();
-		});
-
 		clearScrollSettleTimeout();
 		scrollSettleTimeout = setTimeout(handleScrollSettled, scrollSettleDelay);
 	}
@@ -364,18 +343,8 @@
 		}
 
 		if (!isProgrammaticScroll) {
-			previewYear = nextYear === centeredYear ? undefined : centeredYear;
 			scrollToYear(nextYear, 'smooth');
-		} else {
-			previewYear = undefined;
 		}
-	}
-
-	function clearScrollFrame() {
-		if (scrollFrame === undefined) return;
-
-		cancelAnimationFrame(scrollFrame);
-		scrollFrame = undefined;
 	}
 
 	function clearScrollAnimation() {
@@ -466,17 +435,17 @@
 					<button
 						type="button"
 						role="option"
-						aria-selected={year === displayedYear}
+						aria-selected={year === selectedYear}
 						aria-label={`${year}${availableYearSet.has(year) ? ', map available' : ''}`}
-						tabindex={year === displayedYear ? 0 : -1}
+						tabindex={year === selectedYear ? 0 : -1}
 						onclick={() => selectYear(year)}
 						class="year-picker-row relative z-10 flex w-full cursor-pointer items-center justify-center rounded-sm px-3 text-center leading-none transition {year ===
-						displayedYear
+						visuallySelectedYear
 							? 'text-white'
 							: availableYearSet.has(year)
 								? 'text-gray-900'
 								: 'text-gray-500'}"
-						class:year-picker-selected={year === displayedYear}
+						class:year-picker-selected={year === visuallySelectedYear}
 						class:year-picker-available={availableYearSet.has(year)}
 						class:year-picker-scale-year={!showOnlyAvailableYears && isScaleYear(year)}
 						class:year-picker-century={!showOnlyAvailableYears && isCenturyYear(year)}

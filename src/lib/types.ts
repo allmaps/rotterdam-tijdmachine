@@ -82,6 +82,7 @@ export type AppConfig = {
 	slider: {
 		scaleInterval: number;
 		play?: number;
+		showOnlyAvailableYears?: boolean;
 	};
 	header: {
 		search: string;

@@ -59,6 +59,7 @@ basemap:
 
 slider:
   scaleInterval: 25
+  showOnlyAvailableYears: true
 
 header:
   search: Zoeken
@@ -79,12 +80,12 @@ tour:
   steps:
     - target: time-slider
       title: Reis door de tijd
-      description: Sleep of klik op de verticale slider om naar een ander jaar te gaan.
+      description: Swipe of scroll de verticale slider om naar een ander jaar te gaan.
       side: right
       align: center
     - target: layers
       title: Kies kaartlagen
-      description: Open de kaartlagen om kaarten te zoeken, te filteren en favorieten te bewaren.
+      description: Klik voor meer informatie over de beschikbare kaartlagen. Swipe indien er meerdere kaarten beschikbaar zijn voor het huidige jaar.
       side: top
       align: center
     - target: map-toolbar
@@ -94,7 +95,7 @@ tour:
       align: start
     - target: search
       title: Zoek een plek
-      description: Zoek een adres in Rotterdam of toon je eigen locatie op de kaart.
+      description: Zoek een adres of toon je eigen locatie op de kaart.
       side: bottom
       align: start
     - target: compare
@@ -132,7 +133,7 @@ about:
     - keys: ["⌘", K, "/", Ctrl, K]
       description: Kaartlagen openen
     - keys: ["↑", "↓"]
-      description: Naar het volgende of vorige beschikbare kaartjaar
+      description: ↑ naar het vorige, ↓ naar het volgende beschikbare kaartjaar
     - keys: ["←", "→"]
       description: Door kaarten van hetzelfde jaar bladeren
     - keys: ["+", "=", "-"]

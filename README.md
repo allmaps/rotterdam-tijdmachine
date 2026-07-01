@@ -139,6 +139,7 @@ Important sections:
 - `basemap.protomapsApiKey`: API key used for Protomaps hosted basemap tiles
 - `slider.scaleInterval`: year scale interval
 - `slider.play`: seconds between steps when the play button auto-advances the slider; when this value is omitted, the play button is not shown
+- `slider.showOnlyAvailableYears`: show only years with available maps in the year picker
 - `tour.enabled`: set to `false` to disable the one-time guided tour
 - `header`, `about`, `share`, `search`, `layers`, `controls`, `mapWarnings`: visible labels and modal text
 
@@ -315,9 +316,10 @@ The sharing modal keeps the default link simple and only includes view parameter
 - [Allmaps](https://allmaps.org/)
 - [Protomaps Basemaps](https://github.com/protomaps/basemaps)
 - [Tailwind CSS](https://tailwindcss.com/)
-- [Bits UI](https://bits-ui.com/)
 - [Lucide icons](https://lucide.dev/)
 - [Nominatim](https://nominatim.org/)
+- [driver.js](https://driverjs.com/)
+- [svelte-scroll-input-date-picker](https://github.com/abufahimkhan/svelte-scroll-input-date-picker)
 
 ## Examples and inspiration
 

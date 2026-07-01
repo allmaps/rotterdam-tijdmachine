@@ -51,6 +51,8 @@
 	let dragStartScrollTop = 0;
 	let hasDraggedScale = false;
 	let suppressNextYearClick = false;
+	let keyboardTargetYear: number | undefined;
+	let keyboardNavigationId = 0;
 	let scrollAnimationFrame: number | undefined;
 	let scrollSettleTimeout: ReturnType<typeof setTimeout> | undefined;
 	let programmaticScrollTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -168,22 +170,47 @@
 		);
 	}
 
-	function selectRelativeYear(direction: -1 | 1) {
+	function getRelativeYear(year: number, direction: -1 | 1) {
 		if (selectableYears.length === 0) return;
 
-		const currentAnnotationKey = getAnnotationKeyForYear(selectedYear);
+		const currentAnnotationKey = getAnnotationKeyForYear(year);
 		const candidateYears =
 			direction === 1
-				? selectableYears.filter((year) => year > selectedYear)
-				: selectableYears.filter((year) => year < selectedYear).reverse();
+				? selectableYears.filter((selectableYear) => selectableYear > year)
+				: selectableYears.filter((selectableYear) => selectableYear < year).reverse();
 		const boundaryYear = direction === 1 ? selectableYears.at(-1) : selectableYears[0];
-		const nextYear =
+
+		return (
 			candidateYears.find((year) => getAnnotationKeyForYear(year) !== currentAnnotationKey) ??
 			boundaryYear ??
-			selectedYear;
+			year
+		);
+	}
 
-		if (nextYear !== undefined) {
-			selectedYear = nextYear;
+	function selectRelativeYear(direction: -1 | 1) {
+		const currentYear = keyboardTargetYear ?? selectedYear;
+		const nextYear = getRelativeYear(currentYear, direction);
+
+		if (nextYear !== undefined && nextYear !== currentYear) {
+			const navigationId = ++keyboardNavigationId;
+
+			keyboardTargetYear = nextYear;
+			isInteracting = true;
+			scrollToYear(nextYear, 'smooth', () => {
+				if (navigationId !== keyboardNavigationId || keyboardTargetYear !== nextYear) return;
+
+				selectedYear = nextYear;
+				keyboardTargetYear = undefined;
+				isInteracting = false;
+			});
+		}
+	}
+
+	function blurFocusedYear() {
+		const activeElement = document.activeElement;
+
+		if (activeElement instanceof HTMLElement && container?.contains(activeElement)) {
+			activeElement.blur();
 		}
 	}
 
@@ -195,12 +222,20 @@
 			return;
 		}
 
+		keyboardTargetYear = undefined;
+		keyboardNavigationId += 1;
 		isInteracting = false;
 		selectedYear =
 			(snapToAvailableYear || showOnlyAvailableYears) && selectableYears.length > 0
 				? closestYear(year, selectableYears)
 				: year;
 		scrollToYear(selectedYear, 'smooth');
+	}
+
+	function selectSettledYear(year: number) {
+		if (year !== selectedYear) {
+			selectedYear = year;
+		}
 	}
 
 	function getAnnotationKeyForYear(year: number) {
@@ -268,7 +303,7 @@
 		return 1 - Math.pow(1 - progress, 3);
 	}
 
-	function scrollToYear(year: number, behavior: ScrollMode) {
+	function scrollToYear(year: number, behavior: ScrollMode, onComplete?: () => void) {
 		if (!container || pickerYears.length === 0) return;
 
 		const targetYear = getClosestPickerYear(year);
@@ -278,22 +313,27 @@
 		const top = index * yearRowHeight;
 
 		hasInitializedScroll = true;
-		if (Math.abs(container.scrollTop - top) < 1) return;
+		if (Math.abs(container.scrollTop - top) < 1) {
+			onComplete?.();
+			return;
+		}
 
 		isProgrammaticScroll = true;
 		clearScrollAnimation();
+		clearScrollSettleTimeout();
 		clearProgrammaticScrollTimeout();
 
 		if (behavior === 'auto' || prefersReducedMotion()) {
 			container.scrollTop = top;
+			onComplete?.();
 			releaseProgrammaticScroll();
 			return;
 		}
 
-		animateScrollTo(top);
+		animateScrollTo(top, onComplete);
 	}
 
-	function animateScrollTo(targetTop: number) {
+	function animateScrollTo(targetTop: number, onComplete?: () => void) {
 		if (!container) return;
 
 		const startTop = container.scrollTop;
@@ -318,6 +358,7 @@
 
 			container.scrollTop = targetTop;
 			scrollAnimationFrame = undefined;
+			onComplete?.();
 			releaseProgrammaticScroll();
 		};
 
@@ -332,6 +373,8 @@
 	}
 
 	function handlePickerInteraction() {
+		keyboardTargetYear = undefined;
+		keyboardNavigationId += 1;
 		isInteracting = true;
 		isProgrammaticScroll = false;
 		clearScrollAnimation();
@@ -396,6 +439,8 @@
 	}
 
 	function handleScrollSettled() {
+		if (isProgrammaticScroll) return;
+
 		const centeredYear = getCenteredYear();
 		const nextYear =
 			(snapToAvailableYear || showOnlyAvailableYears) && selectableYears.length > 0
@@ -403,14 +448,9 @@
 				: centeredYear;
 
 		isInteracting = false;
+		selectSettledYear(nextYear);
 
-		if (nextYear !== selectedYear) {
-			selectedYear = nextYear;
-		}
-
-		if (!isProgrammaticScroll) {
-			scrollToYear(nextYear, 'smooth');
-		}
+		scrollToYear(nextYear, 'smooth');
 	}
 
 	function clearScrollAnimation() {
@@ -435,7 +475,7 @@
 	}
 
 	function handleGlobalKeydown(event: KeyboardEvent) {
-		if (!enableKeyboardShortcut || event.repeat) return;
+		if (!enableKeyboardShortcut) return;
 		if (hasOpenModal()) return;
 		if (event.shiftKey || event.metaKey || event.ctrlKey || event.altKey) return;
 		if (isEditableTarget(event.target)) return;
@@ -443,12 +483,14 @@
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			event.stopImmediatePropagation();
+			blurFocusedYear();
 			selectRelativeYear(-1);
 		}
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			event.stopImmediatePropagation();
+			blurFocusedYear();
 			selectRelativeYear(1);
 		}
 	}
